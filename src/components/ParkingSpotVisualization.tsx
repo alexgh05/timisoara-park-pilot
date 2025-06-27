@@ -7,7 +7,7 @@ import { Car, Trees, Circle } from "lucide-react";
 interface ParkingSpot {
   id: string;
   isOccupied: boolean;
-  orientation: 'horizontal' | 'vertical';
+  orientation: 'horizontal' | 'vertical' | 'diagonal';
   position: { x: number; y: number };
 }
 
@@ -24,11 +24,11 @@ export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotV
     { id: "H3", isOccupied: false, orientation: 'horizontal', position: { x: 55, y: 20 } },
     { id: "H4", isOccupied: true, orientation: 'horizontal', position: { x: 75, y: 20 } },
     
-    // Vertical spots (right side)
-    { id: "V1", isOccupied: false, orientation: 'vertical', position: { x: 75, y: 45 } },
-    { id: "V2", isOccupied: true, orientation: 'vertical', position: { x: 75, y: 60 } },
-    { id: "V3", isOccupied: false, orientation: 'vertical', position: { x: 75, y: 75 } },
-    { id: "V4", isOccupied: false, orientation: 'vertical', position: { x: 75, y: 90 } },
+    // Diagonal spots (bottom row)
+    { id: "V1", isOccupied: false, orientation: 'diagonal', position: { x: 20, y: 80 } },
+    { id: "V2", isOccupied: true, orientation: 'diagonal', position: { x: 35, y: 80 } },
+    { id: "V3", isOccupied: false, orientation: 'diagonal', position: { x: 50, y: 80 } },
+    { id: "V4", isOccupied: false, orientation: 'diagonal', position: { x: 65, y: 80 } },
   ]);
 
   // Simulate real-time updates from embedded system
@@ -122,12 +122,16 @@ export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotV
             <div
               key={spot.id}
               className={`absolute transition-all duration-500 ${
-                spot.orientation === 'horizontal' ? 'w-16 h-8' : 'w-8 h-16'
+                spot.orientation === 'horizontal' ? 'w-16 h-8' : 
+                spot.orientation === 'vertical' ? 'w-8 h-16' : 
+                'w-14 h-10'
               }`}
               style={{
                 left: `${spot.position.x}%`,
                 top: `${spot.position.y}%`,
-                transform: 'translate(-50%, -50%)'
+                transform: spot.orientation === 'diagonal' 
+                  ? 'translate(-50%, -50%) rotate(-30deg)' 
+                  : 'translate(-50%, -50%)'
               }}
             >
               {/* Parking spot outline */}
@@ -141,14 +145,20 @@ export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotV
                   <div className="w-full h-full flex items-center justify-center">
                     <Car 
                       className={`text-slate-300 ${
-                        spot.orientation === 'horizontal' ? 'h-6 w-6' : 'h-6 w-6 rotate-90'
+                        spot.orientation === 'horizontal' ? 'h-6 w-6' : 
+                        spot.orientation === 'vertical' ? 'h-6 w-6 rotate-90' :
+                        'h-5 w-5'
                       }`}
                     />
                   </div>
                 )}
                 
                 {/* Spot ID */}
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 text-xs font-bold text-slate-300 bg-slate-700 px-1 rounded">
+                <div className={`absolute ${
+                  spot.orientation === 'diagonal' ? '-top-3 left-1/2' : '-top-4 left-1/2'
+                } transform -translate-x-1/2 text-xs font-bold text-slate-300 bg-slate-700 px-1 rounded ${
+                  spot.orientation === 'diagonal' ? 'rotate-30' : ''
+                }`}>
                   {spot.id}
                 </div>
               </div>
@@ -157,7 +167,7 @@ export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotV
 
           {/* Road markings */}
           <div className="absolute top-1/2 left-4 right-4 h-px bg-yellow-400 transform -translate-y-1/2"></div>
-          <div className="absolute bottom-1/4 left-4 right-16 h-px bg-yellow-400"></div>
+          <div className="absolute bottom-1/3 left-4 right-4 h-px bg-yellow-400"></div>
         </div>
 
         {/* Spot details */}

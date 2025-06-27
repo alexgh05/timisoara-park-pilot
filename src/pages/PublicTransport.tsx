@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bus, Clock, ExternalLink, Navigation, MapPin } from "lucide-react";
+import { Bus, Clock, Navigation, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PublicTransport = () => {
@@ -114,9 +114,7 @@ const PublicTransport = () => {
     });
   };
 
-  const openScheduleLink = () => {
-    window.open("https://www.ratt.ro/trasee-si-orare/", '_blank');
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -177,16 +175,7 @@ const PublicTransport = () => {
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={openScheduleLink}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Schedule
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1"
+                    className="w-full"
                     onClick={() => openGoogleMapsRoute(transport.coordinates, transport.stop)}
                   >
                     <Navigation className="h-3 w-3 mr-1" />

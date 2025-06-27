@@ -118,7 +118,12 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
 
   const openGoogleMapsRoute = (destination: { lat: number; lng: number }, destinationName: string) => {
     if (userLocation) {
-      const url = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${destination.lat},${destination.lng}`;
+      // Formatează coordonatele cu 6 zecimale pentru a evita notația științifică
+      const userLat = userLocation.lat.toFixed(6);
+      const userLng = userLocation.lng.toFixed(6);
+      const destLat = destination.lat.toFixed(6);
+      const destLng = destination.lng.toFixed(6);
+      const url = `https://www.google.com/maps/dir/${userLat},${userLng}/${destLat},${destLng}`;
       window.open(url, '_blank');
       toast({
         title: "Route Opened",
@@ -129,6 +134,60 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
         title: "Location Required",
         description: "Please enable location access for routing",
         variant: "destructive"
+      });
+    }
+  };
+
+  const openPublicTransportRoute = (destination: { lat: number; lng: number }, destinationName: string) => {
+    // Verifică dacă utilizatorul a acceptat locația
+    const locationConsent = localStorage.getItem('location-consent');
+    
+    if (locationConsent === 'accepted' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Folosește locația reală pentru navigare cu transport public
+          // Formatează coordonatele cu 6 zecimale pentru a evita notația științifică
+          const userLat = position.coords.latitude.toFixed(6);
+          const userLng = position.coords.longitude.toFixed(6);
+          const destLat = destination.lat.toFixed(6);
+          const destLng = destination.lng.toFixed(6);
+          const url = `https://www.google.com/maps/dir/${userLat},${userLng}/${destLat},${destLng}/data=!3m1!4b1!4m2!4m1!3e3`;
+          window.open(url, '_blank');
+          toast({
+            title: "Transport public",
+            description: `Deschis transport public către ${destinationName} în Google Maps`
+          });
+        },
+        () => {
+          // Fallback la căutare cu transport public dacă nu poate obține locația
+          const url = `https://www.google.com/maps/search/${encodeURIComponent(destinationName + " Timișoara")}/data=!3m1!4b1!4m2!4m1!3e3`;
+          window.open(url, '_blank');
+          toast({
+            title: "Transport public",
+            description: `Deschis transport public către ${destinationName}`
+          });
+        }
+      );
+    } else if (userLocation) {
+      // Folosește locația din props dacă este disponibilă
+      // Formatează coordonatele cu 6 zecimale pentru a evita notația științifică
+      const userLat = userLocation.lat.toFixed(6);
+      const userLng = userLocation.lng.toFixed(6);
+      const destLat = destination.lat.toFixed(6);
+      const destLng = destination.lng.toFixed(6);
+      const url = `https://www.google.com/maps/dir/${userLat},${userLng}/${destLat},${destLng}/data=!3m1!4b1!4m2!4m1!3e3`;
+      window.open(url, '_blank');
+      toast({
+        title: "Transport public",
+        description: `Deschis transport public către ${destinationName} în Google Maps`
+      });
+    } else {
+      // Fallback la căutare cu transport public
+      const url = `https://www.google.com/maps/search/${encodeURIComponent(destinationName + " Timișoara")}/data=!3m1!4b1!4m2!4m1!3e3`;
+      window.open(url, '_blank');
+      toast({
+        title: "Transport public",
+        description: `Deschis transport public către ${destinationName}`
       });
     }
   };
@@ -152,6 +211,9 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
     map.current.on('load', () => {
       if (!map.current || !userLocation) return;
 
+      // Store markers for zoom-based scaling
+      const markers: { marker: mapboxgl.Marker; element: HTMLDivElement; zone: ParkingZone }[] = [];
+
       // Add parking zone markers
       zones.forEach((zone) => {
         const isFullOrAlmostFull = zone.availableSpots === 0 || (zone.availableSpots / zone.totalSpots) < 0.1;
@@ -172,28 +234,10 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
           font-weight: bold;
           font-size: 12px;
           box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
           position: relative;
-          transform-origin: center center;
-          will-change: transform;
-          backface-visibility: hidden;
-          contain: layout style paint;
+          transition: all 0.3s ease;
         `;
         markerElement.textContent = zone.availableSpots.toString();
-        
-        // Improved hover effects that prevent position jumping
-        markerElement.addEventListener('mouseenter', (e) => {
-          e.stopPropagation();
-          markerElement.style.transform = 'scale(1.1)';
-          markerElement.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
-          markerElement.style.zIndex = '100';
-        });
-        markerElement.addEventListener('mouseleave', (e) => {
-          e.stopPropagation();
-          markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
-          markerElement.style.zIndex = '1';
-        });
 
         // Modern popup content with better styling
         const popupContent = `
@@ -288,7 +332,7 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
             ` : ''}
             
             <div style="display: flex; gap: 8px;">
-              <button id="select-zone-${zone.id}" style="
+              <button id="alternatives-zone-${zone.id}" style="
                 flex: 1;
                 background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                 color: white;
@@ -302,7 +346,7 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
                 box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
               " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)';" 
                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.3)';">
-                ${zone.availableSpots > 0 ? '✓ Selectează' : '👁️ Vezi alternative'}
+                👁️ Vezi alternative
               </button>
               <button id="route-zone-${zone.id}" style="
                 flex: 1;
@@ -338,19 +382,17 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
           .setPopup(popup)
           .addTo(map.current!);
 
+        // Store marker reference for zoom handling
+        markers.push({ marker, element: markerElement, zone });
+
         popup.on('open', () => {
-          const selectButton = document.getElementById(`select-zone-${zone.id}`);
+          const alternativesButton = document.getElementById(`alternatives-zone-${zone.id}`);
           const routeButton = document.getElementById(`route-zone-${zone.id}`);
           
-          if (selectButton) {
-            selectButton.addEventListener('click', () => {
-              setSelectedZone(zone.id);
-              onZoneSelect(zone.id);
+          if (alternativesButton) {
+            alternativesButton.addEventListener('click', () => {
               popup.remove();
-              toast({
-                title: "Zonă selectată",
-                description: `Ai selectat ${zone.name} pentru vizualizare detaliată`
-              });
+              openPublicTransportRoute(zone.coordinates, zone.name);
             });
           }
 
@@ -362,6 +404,50 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
           }
         });
       });
+
+      // Function to update marker size based on zoom level
+      const updateMarkersForZoom = () => {
+        const currentZoom = map.current?.getZoom() || 13;
+        
+        markers.forEach(({ element, marker }) => {
+          // Hide markers when zoom is too low (below 11)
+          if (currentZoom < 11) {
+            element.style.display = 'none';
+            return;
+          }
+          
+          // Show markers and scale them based on zoom
+          element.style.display = 'flex';
+          
+          // Calculate scale factor (zoom 13 = normal size, zoom 11 = 50%, zoom 15+ = 120%)
+          let scaleFactor = 1;
+          if (currentZoom < 13) {
+            scaleFactor = 0.5 + ((currentZoom - 11) / 2) * 0.5; // 0.5 to 1.0
+          } else if (currentZoom > 15) {
+            scaleFactor = 1.2; // Max scale at high zoom
+          } else {
+            scaleFactor = 1 + ((currentZoom - 13) / 2) * 0.2; // 1.0 to 1.2
+          }
+          
+          // Apply scaling
+          const baseSize = 40;
+          const newSize = Math.round(baseSize * scaleFactor);
+          const fontSize = Math.round(12 * scaleFactor);
+          const borderWidth = Math.round(3 * scaleFactor);
+          
+          element.style.width = `${newSize}px`;
+          element.style.height = `${newSize}px`;
+          element.style.fontSize = `${fontSize}px`;
+          element.style.borderWidth = `${borderWidth}px`;
+        });
+      };
+
+      // Listen for zoom changes
+      map.current.on('zoom', updateMarkersForZoom);
+      map.current.on('zoomend', updateMarkersForZoom);
+      
+      // Initial marker sizing
+      updateMarkersForZoom();
     });
   };
 
