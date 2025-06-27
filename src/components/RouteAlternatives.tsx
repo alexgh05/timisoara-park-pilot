@@ -1,8 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Car, Bus, Navigation, Clock, ExternalLink } from "lucide-react";
+import { Car, Bus, Navigation, Clock, ExternalLink, TrendingUp } from "lucide-react";
 
 interface RouteAlternativesProps {
   selectedZone: string | null;
