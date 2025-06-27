@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -176,11 +175,11 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
         },
         (error) => {
           console.log("Location access denied, using default location");
-          setUserLocation({ lat: 45.7489, lng: 21.2267 }); // Default to Timișoara center
+          setUserLocation({ lat: 45.7489, lng: 21.2267 });
         }
       );
     } else {
-      setUserLocation({ lat: 45.7489, lng: 21.2267 }); // Default to Timișoara center
+      setUserLocation({ lat: 45.7489, lng: 21.2267 });
     }
   };
 
@@ -210,7 +209,7 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: [21.2267, 45.7489], // Timișoara center
+      center: [21.2267, 45.7489],
       zoom: 13,
       pitch: 45,
     });
@@ -479,7 +478,7 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <MapPin className="h-5 w-5" />
-          <span>Timișoara Smart Parking & Transport</span>
+          <span>Timișoara Smart Parking</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -490,33 +489,21 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
             style={{ minHeight: '500px' }}
           />
           
-          {/* Enhanced Legend */}
+          {/* Simplified Legend - Only Parking */}
           <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 border z-10">
-            <h4 className="font-semibold text-sm mb-2">Legend</h4>
+            <h4 className="font-semibold text-sm mb-2">Parking Legend</h4>
             <div className="space-y-1 text-xs">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span>Parking Available</span>
+                <span>Available (50%+)</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <span>Limited Parking</span>
+                <span>Limited (20-50%)</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span>Parking Full</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span>🚌 Bus Stops</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                <span>🚋 Tram Stops</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span>🚲 Bike Stations</span>
+                <span>Full (0-20%)</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500"></div>
@@ -524,7 +511,7 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
               </div>
             </div>
             <div className="mt-2 pt-2 border-t text-xs text-slate-400">
-              Click bubbles for options & routing
+              Click parking bubbles to view details
             </div>
           </div>
         </div>
