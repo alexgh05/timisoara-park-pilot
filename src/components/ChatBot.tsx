@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { X, Send, Bot, User, ExternalLink } from "lucide-react";
+import { X, Send, Bot, User, ExternalLink, MapPin, Navigation } from "lucide-react";
+import { aiService, type ChatMessage } from "@/services/aiService";
 
 interface Message {
   id: string;
@@ -22,9 +23,14 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your smart parking assistant. I can help you find parking spots, suggest public transport alternatives when parking is full, locate bike stations, and provide routing options. How can I help you today?',
+      text: '🤖 Hello! I\'m your AI-powered Smart Parking Assistant for Timișoara! I have real-time access to all parking zones, live spot availability, and can provide intelligent recommendations.\n\n✨ Ask me anything about:\n• Current parking availability\n• Best alternative routes when zones are full\n• Public transport connections\n• Bike sharing options\n• Navigation and directions\n\nI can see that right now we have 425 total available spots across the city. What can I help you find?',
       sender: 'bot',
-      timestamp: new Date()
+      timestamp: new Date(),
+      links: [
+        { text: '🗺️ View Parking Map', url: '/' },
+        { text: '🚌 Public Transport', url: '/public-transport' },
+        { text: '🚲 Bike Stations', url: '/bike-stations' }
+      ]
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -39,113 +45,72 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
     scrollToBottom();
   }, [messages]);
 
-  const generateBotResponse = (userMessage: string): Message => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('parking') && lowerMessage.includes('full')) {
+  const generateAIResponse = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<Message> => {
+    try {
+      const response = await aiService.sendMessage([
+        ...conversationHistory,
+        { role: 'user', content: userMessage }
+      ]);
+
+      // Parse response for navigation links
+      const links: { text: string; url: string }[] = [];
+      
+      // Check if response mentions available zones and add navigation links
+      const bestZones = aiService.getBestAvailableZones();
+      const lowerResponse = response.toLowerCase();
+      
+      if (lowerResponse.includes('bega shopping') && bestZones.some(z => z.name === 'Bega Shopping Center')) {
+        const zone = bestZones.find(z => z.name === 'Bega Shopping Center');
+        if (zone) {
+          links.push({
+            text: `🗺️ Navigate to ${zone.name}`,
+            url: `https://www.google.com/maps/dir//${zone.coordinates.lat.toFixed(6)},${zone.coordinates.lng.toFixed(6)}`
+          });
+        }
+      }
+      
+      if (lowerResponse.includes('iulius mall') && bestZones.some(z => z.name === 'Iulius Mall')) {
+        const zone = bestZones.find(z => z.name === 'Iulius Mall');
+        if (zone) {
+          links.push({
+            text: `🗺️ Navigate to ${zone.name}`,
+            url: `https://www.google.com/maps/dir//${zone.coordinates.lat.toFixed(6)},${zone.coordinates.lng.toFixed(6)}`
+          });
+        }
+      }
+
+      // Add app navigation links for transport and bikes
+      if (lowerResponse.includes('public transport') || lowerResponse.includes('bus') || lowerResponse.includes('tram')) {
+        links.push({ text: '🚌 View Public Transport', url: '/public-transport' });
+      }
+      
+      if (lowerResponse.includes('bike') || lowerResponse.includes('bicycle')) {
+        links.push({ text: '🚲 View Bike Stations', url: '/bike-stations' });
+      }
+
       return {
         id: Date.now().toString(),
-        text: 'When parking is full, I recommend these alternatives: 🚌 Public transport (Bus Line 11 to Piața Victoriei, Tram Line 1 to Centrul Vechi), 🚲 Bike stations (8 bikes available at Piața Victoriei, 12 at Universitate), or 🗺️ I can route you to alternative parking zones. Would you like me to show you the closest options?',
+        text: response,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: links.length > 0 ? links : undefined
       };
-    }
-    
-    if (lowerMessage.includes('transport') || lowerMessage.includes('bus') || lowerMessage.includes('tram')) {
+    } catch (error) {
+      console.error('AI Response Error:', error);
       return {
         id: Date.now().toString(),
-        text: 'Check out our dedicated Public Transport page for real-time bus and tram information! 🚌 Bus lines with next arrivals, 🚋 Tram schedules, 🗺️ Route planning from your location. Click the link below to explore all options.',
+        text: 'I\'m having trouble connecting to the AI service right now. Please try again in a moment. In the meantime, you can check our parking map for real-time availability!',
         sender: 'bot',
         timestamp: new Date(),
         links: [
-          { text: 'View Public Transport Options', url: '/public-transport' },
-          { text: 'RATT Official Schedules', url: 'https://www.ratt.ro/trasee-si-orare/' }
+          { text: '🚌 Public Transport', url: '/public-transport' },
+          { text: '🚲 Bike Stations', url: '/bike-stations' }
         ]
       };
     }
-    
-    if (lowerMessage.includes('bike') || lowerMessage.includes('bicycle')) {
-      return {
-        id: Date.now().toString(),
-        text: 'Visit our Bike Stations page for complete bike sharing information! 🚲 Real-time bike availability, ⚡ Electric bike locations, 🗺️ Routes to stations, and usage tips. Perfect eco-friendly alternative when parking is full!',
-        sender: 'bot',
-        timestamp: new Date(),
-        links: [
-          { text: 'View Bike Stations', url: '/bike-stations' }
-        ]
-      };
-    }
-    
-    if (lowerMessage.includes('route') || lowerMessage.includes('directions') || lowerMessage.includes('navigate')) {
-      return {
-        id: Date.now().toString(),
-        text: 'I can help you with routing! 🗺️ Click any parking bubble on the map for "Route to Parking" option, or I can show you routes to public transport stops and bike stations. All routes open in Google Maps with turn-by-turn directions from your current location.',
-        sender: 'bot',
-        timestamp: new Date()
-      };
-    }
-    
-    if (lowerMessage.includes('alternative') || lowerMessage.includes('options')) {
-      return {
-        id: Date.now().toString(),
-        text: 'Smart Alternatives when parking is full: 1️⃣ Alternative Parking (Bega Shopping: 156 spots, Iulius Mall: 267 spots), 2️⃣ Public Transport (dedicated page with live updates), 3️⃣ Bike Stations (dedicated page with real-time availability), 4️⃣ Walking + Transport combos. Need specific directions?',
-        sender: 'bot',
-        timestamp: new Date(),
-        links: [
-          { text: 'Public Transport Options', url: '/public-transport' },
-          { text: 'Bike Station Locations', url: '/bike-stations' }
-        ]
-      };
-    }
-    
-    if (lowerMessage.includes('victoriei')) {
-      return {
-        id: Date.now().toString(),
-        text: 'Piața Victoriei is currently FULL (0/120 spots). Alternatives: 🚌 Check Public Transport page for Bus Line 11 details, 🚲 Visit Bike Stations page for nearby bikes, or 🅿️ Try Bega Shopping (15 min walk, 156 spots available). Which option works best?',
-        sender: 'bot',
-        timestamp: new Date(),
-        links: [
-          { text: 'Public Transport', url: '/public-transport' },
-          { text: 'Bike Stations', url: '/bike-stations' }
-        ]
-      };
-    }
-    
-    if (lowerMessage.includes('universitate')) {
-      return {
-        id: Date.now().toString(),
-        text: 'Universitate parking is FULL (0/75 spots). Great alternatives: 🚲 Check our Bike Stations page (very popular with students!), 🚌 View Public Transport page for Bus Line 14, or 🅿️ Iulius Mall parking (10 min by bus, 267 spots). Students love the bike option!',
-        sender: 'bot',
-        timestamp: new Date(),
-        links: [
-          { text: 'Bike Stations', url: '/bike-stations' },
-          { text: 'Public Transport', url: '/public-transport' }
-        ]
-      };
-    }
-    
-    if (lowerMessage.includes('zone') || lowerMessage.includes('area') || lowerMessage.includes('status')) {
-      return {
-        id: Date.now().toString(),
-        text: 'Current Status: 🔴 FULL: Piața Victoriei (0/120), Universitate (0/75) 🔴 ALMOST FULL: Centrul Vechi (2/85) 🟢 AVAILABLE: Bega Shopping (156/300), Iulius Mall (267/450). For full zones, I recommend public transport or bikes - want specific directions?',
-        sender: 'bot',
-        timestamp: new Date()
-      };
-    }
-    
-    return {
-      id: Date.now().toString(),
-      text: 'I can help you with: 🅿️ Real-time parking availability, 🚌 Public transport (dedicated page), 🚲 Bike stations (dedicated page), 🗺️ Google Maps routing, 📍 Smart alternatives when parking is full. Try asking "What if parking is full?" or check our transport pages!',
-      sender: 'bot',
-      timestamp: new Date(),
-      links: [
-        { text: 'Public Transport', url: '/public-transport' },
-        { text: 'Bike Stations', url: '/bike-stations' }
-      ]
-    };
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
     const userMessage: Message = {
@@ -155,15 +120,32 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
       timestamp: new Date()
     };
 
+    // Build conversation history for context
+    const conversationHistory: ChatMessage[] = messages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text
+    }));
+
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponse = generateBotResponse(inputText);
+    try {
+      const botResponse = await generateAIResponse(currentInput, conversationHistory);
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Error generating response:', error);
+      const errorResponse: Message = {
+        id: Date.now().toString(),
+        text: 'Sorry, I encountered an error. Please try again.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

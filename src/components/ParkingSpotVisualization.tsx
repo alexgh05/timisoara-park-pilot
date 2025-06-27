@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Car, Trees, Circle } from "lucide-react";
+import { useParkingSync } from "@/hooks/useParkingSync";
 
 interface ParkingSpot {
   id: string;
@@ -30,6 +30,9 @@ export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotV
     { id: "V3", isOccupied: false, orientation: 'diagonal', position: { x: 50, y: 80 } },
     { id: "V4", isOccupied: false, orientation: 'diagonal', position: { x: 65, y: 80 } },
   ]);
+
+  // Sync live parking spot data with AI service  
+  const { updateAIData } = useParkingSync(undefined, spots);
 
   // Simulate real-time updates from embedded system
   useEffect(() => {

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Car, Navigation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useParkingSync } from "@/hooks/useParkingSync";
 
 interface ParkingZone {
   id: string;
@@ -82,6 +83,9 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
       description: "Premium mall with multi-level parking"
     }
   ]);
+
+  // Sync parking data with AI service
+  useParkingSync(zones);
 
   const getAvailabilityColor = (available: number, total: number) => {
     const percentage = (available / total) * 100;
