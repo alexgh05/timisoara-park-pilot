@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Car, Bus, Bike, Navigation } from "lucide-react";
+import { MapPin, Car, Navigation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ParkingZone {
@@ -18,32 +18,16 @@ interface ParkingZone {
   description: string;
 }
 
-interface PublicTransport {
-  id: string;
-  type: 'bus' | 'tram';
-  line: string;
-  stop: string;
-  coordinates: { lat: number; lng: number };
-  nextArrival: string;
-}
-
-interface BikeStation {
-  id: string;
-  name: string;
-  coordinates: { lat: number; lng: number };
-  availableBikes: number;
-  totalSpots: number;
-}
-
 interface ParkingMapProps {
   onZoneSelect: (zoneId: string) => void;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
-export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
+export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: ParkingMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(propUserLocation || null);
   const { toast } = useToast();
 
   const [zones] = useState<ParkingZone[]>([
@@ -96,57 +80,6 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
       coordinates: { lat: 45.7308, lng: 21.2267 },
       color: "#22c55e",
       description: "Premium mall with multi-level parking"
-    }
-  ]);
-
-  const [publicTransport] = useState<PublicTransport[]>([
-    {
-      id: "bus-1",
-      type: "bus",
-      line: "Line 11",
-      stop: "Piața Victoriei",
-      coordinates: { lat: 45.7498, lng: 21.2275 },
-      nextArrival: "3 min"
-    },
-    {
-      id: "tram-1",
-      type: "tram",
-      line: "Line 1",
-      stop: "Catedrala",
-      coordinates: { lat: 45.7540, lng: 21.2255 },
-      nextArrival: "7 min"
-    },
-    {
-      id: "bus-2",
-      type: "bus",
-      line: "Line 14",
-      stop: "Universitate",
-      coordinates: { lat: 45.7475, lng: 21.2085 },
-      nextArrival: "5 min"
-    }
-  ]);
-
-  const [bikeStations] = useState<BikeStation[]>([
-    {
-      id: "bike-1",
-      name: "Piața Victoriei Bikes",
-      coordinates: { lat: 45.7490, lng: 21.2270 },
-      availableBikes: 8,
-      totalSpots: 15
-    },
-    {
-      id: "bike-2",
-      name: "Centrul Vechi Bikes",
-      coordinates: { lat: 45.7540, lng: 21.2248 },
-      availableBikes: 3,
-      totalSpots: 12
-    },
-    {
-      id: "bike-3",
-      name: "Universitate Bikes",
-      coordinates: { lat: 45.7470, lng: 21.2078 },
-      availableBikes: 12,
-      totalSpots: 20
     }
   ]);
 
@@ -217,100 +150,187 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
-      // Add user location if available
-      if (userLocation) {
-        const userMarker = document.createElement('div');
-        userMarker.className = 'user-marker';
-        userMarker.style.cssText = `
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background-color: #3b82f6;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          position: relative;
-        `;
-        
-        new mapboxgl.Marker(userMarker)
-          .setLngLat([userLocation.lng, userLocation.lat])
-          .addTo(map.current!);
-      }
+      if (!map.current || !userLocation) return;
 
       // Add parking zone markers
       zones.forEach((zone) => {
+        const isFullOrAlmostFull = zone.availableSpots === 0 || (zone.availableSpots / zone.totalSpots) < 0.1;
+
         const markerElement = document.createElement('div');
         markerElement.className = 'parking-marker';
         markerElement.style.cssText = `
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background-color: ${getAvailabilityColor(zone.availableSpots, zone.totalSpots)};
+          background-color: ${zone.color};
           border: 3px solid white;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: bold;
           color: white;
           cursor: pointer;
+          font-weight: bold;
           font-size: 12px;
           box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-          transition: transform 0.2s;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          position: relative;
+          transform-origin: center center;
+          will-change: transform;
+          backface-visibility: hidden;
+          contain: layout style paint;
         `;
         markerElement.textContent = zone.availableSpots.toString();
         
-        markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.2)';
+        // Improved hover effects that prevent position jumping
+        markerElement.addEventListener('mouseenter', (e) => {
+          e.stopPropagation();
+          markerElement.style.transform = 'scale(1.1)';
+          markerElement.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
+          markerElement.style.zIndex = '100';
         });
-        
-        markerElement.addEventListener('mouseleave', () => {
+        markerElement.addEventListener('mouseleave', (e) => {
+          e.stopPropagation();
           markerElement.style.transform = 'scale(1)';
+          markerElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+          markerElement.style.zIndex = '1';
         });
 
-        const isFullOrAlmostFull = zone.availableSpots <= 2;
-        
+        // Modern popup content with better styling
         const popupContent = `
-          <div class="p-3 min-w-[280px]">
-            <h3 class="font-bold text-lg mb-2">${zone.name}</h3>
-            <p class="text-sm text-gray-600 mb-2">${zone.address}</p>
-            <p class="text-sm mb-3">${zone.description}</p>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm">Available:</span>
-              <span class="font-bold">${zone.availableSpots}/${zone.totalSpots}</span>
-            </div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm">Status:</span>
-              <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: ${getAvailabilityColor(zone.availableSpots, zone.totalSpots)}; color: white;">
+          <div style="
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 350px;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+          ">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <h3 style="
+                font-size: 18px; 
+                font-weight: 700; 
+                margin: 0;
+                color: #f1f5f9;
+              ">${zone.name}</h3>
+              <div style="
+                background-color: ${getAvailabilityColor(zone.availableSpots, zone.totalSpots)};
+                color: white;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+              ">
                 ${getAvailabilityText(zone.availableSpots, zone.totalSpots)}
-              </span>
+              </div>
             </div>
+            
+            <div style="margin-bottom: 16px;">
+              <p style="
+                color: #94a3b8; 
+                font-size: 14px; 
+                margin: 0 0 8px 0;
+                line-height: 1.4;
+              ">📍 ${zone.address}</p>
+              <p style="
+                color: #cbd5e1; 
+                font-size: 13px; 
+                margin: 0;
+                line-height: 1.4;
+              ">${zone.description}</p>
+            </div>
+            
+            <div style="
+              background: rgba(0,0,0,0.2);
+              border-radius: 8px;
+              padding: 12px;
+              margin-bottom: 16px;
+            ">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #94a3b8; font-size: 14px;">Disponibile:</span>
+                <span style="color: #f1f5f9; font-weight: 600; font-size: 16px;">
+                  ${zone.availableSpots}/${zone.totalSpots}
+                </span>
+              </div>
+              <div style="
+                width: 100%;
+                height: 4px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 2px;
+                overflow: hidden;
+              ">
+                <div style="
+                  width: ${(zone.availableSpots / zone.totalSpots) * 100}%;
+                  height: 100%;
+                  background: ${getAvailabilityColor(zone.availableSpots, zone.totalSpots)};
+                  transition: width 0.3s ease;
+                "></div>
+              </div>
+            </div>
+            
             ${isFullOrAlmostFull ? `
-              <div class="mb-3 p-2 bg-red-50 border border-red-200 rounded">
-                <p class="text-xs text-red-700 font-medium">⚠️ Parking Full - Alternatives Available</p>
+              <div style="
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 16px;
+              ">
+                <p style="
+                  color: #fca5a5;
+                  font-size: 12px;
+                  margin: 0;
+                  font-weight: 500;
+                ">⚠️ Parcare plină - Verifică alternative în sidebar</p>
               </div>
             ` : ''}
-            <div class="space-y-2">
-              <button id="select-zone-${zone.id}" class="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors text-sm">
-                ${zone.availableSpots > 0 ? 'Select This Zone' : 'View Alternatives'}
+            
+            <div style="display: flex; gap: 8px;">
+              <button id="select-zone-${zone.id}" style="
+                flex: 1;
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+              " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.4)';" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(59, 130, 246, 0.3)';">
+                ${zone.availableSpots > 0 ? '✓ Selectează' : '👁️ Vezi alternative'}
               </button>
-              <button id="route-zone-${zone.id}" class="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition-colors text-sm">
-                🗺️ Route to Parking
+              <button id="route-zone-${zone.id}" style="
+                flex: 1;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+              " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(16, 185, 129, 0.4)';" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(16, 185, 129, 0.3)';">
+                🗺️ Navigare
               </button>
-              ${isFullOrAlmostFull ? `
-                <button id="transport-${zone.id}" class="w-full bg-purple-600 text-white px-3 py-2 rounded hover:bg-purple-700 transition-colors text-sm">
-                  🚌 Public Transport
-                </button>
-                <button id="bikes-${zone.id}" class="w-full bg-orange-600 text-white px-3 py-2 rounded hover:bg-orange-700 transition-colors text-sm">
-                  🚲 Bike Stations
-                </button>
-              ` : ''}
             </div>
           </div>
         `;
 
         const popup = new mapboxgl.Popup({
-          offset: 25,
+          offset: [15, 0],
           closeButton: true,
-          closeOnClick: false
+          closeOnClick: false,
+          className: 'modern-parking-popup',
+          anchor: 'left',
+          maxWidth: '320px'
         }).setHTML(popupContent);
 
         const marker = new mapboxgl.Marker(markerElement)
@@ -321,8 +341,6 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
         popup.on('open', () => {
           const selectButton = document.getElementById(`select-zone-${zone.id}`);
           const routeButton = document.getElementById(`route-zone-${zone.id}`);
-          const transportButton = document.getElementById(`transport-${zone.id}`);
-          const bikesButton = document.getElementById(`bikes-${zone.id}`);
           
           if (selectButton) {
             selectButton.addEventListener('click', () => {
@@ -330,8 +348,8 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
               onZoneSelect(zone.id);
               popup.remove();
               toast({
-                title: "Zone Selected",
-                description: `Selected ${zone.name} for detailed view`
+                title: "Zonă selectată",
+                description: `Ai selectat ${zone.name} pentru vizualizare detaliată`
               });
             });
           }
@@ -342,178 +360,88 @@ export const ParkingMap = ({ onZoneSelect }: ParkingMapProps) => {
               popup.remove();
             });
           }
-
-          if (transportButton) {
-            transportButton.addEventListener('click', () => {
-              showPublicTransportOptions(zone);
-              popup.remove();
-            });
-          }
-
-          if (bikesButton) {
-            bikesButton.addEventListener('click', () => {
-              showBikeStations(zone);
-              popup.remove();
-            });
-          }
         });
       });
-
-      // Add public transport markers
-      publicTransport.forEach((transport) => {
-        const transportMarker = document.createElement('div');
-        transportMarker.className = 'transport-marker';
-        transportMarker.style.cssText = `
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background-color: ${transport.type === 'bus' ? '#8b5cf6' : '#06b6d4'};
-          border: 2px solid white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          cursor: pointer;
-          font-size: 14px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        `;
-        transportMarker.textContent = transport.type === 'bus' ? '🚌' : '🚋';
-
-        const transportPopup = new mapboxgl.Popup({ offset: 15 })
-          .setHTML(`
-            <div class="p-2">
-              <h3 class="font-bold">${transport.line}</h3>
-              <p class="text-sm">Stop: ${transport.stop}</p>
-              <p class="text-sm">Next: ${transport.nextArrival}</p>
-            </div>
-          `);
-
-        new mapboxgl.Marker(transportMarker)
-          .setLngLat([transport.coordinates.lng, transport.coordinates.lat])
-          .setPopup(transportPopup)
-          .addTo(map.current!);
-      });
-
-      // Add bike station markers
-      bikeStations.forEach((station) => {
-        const bikeMarker = document.createElement('div');
-        bikeMarker.className = 'bike-marker';
-        bikeMarker.style.cssText = `
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background-color: #f97316;
-          border: 2px solid white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          cursor: pointer;
-          font-size: 14px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        `;
-        bikeMarker.textContent = '🚲';
-
-        const bikePopup = new mapboxgl.Popup({ offset: 15 })
-          .setHTML(`
-            <div class="p-2">
-              <h3 class="font-bold text-sm">${station.name}</h3>
-              <p class="text-sm">Available: ${station.availableBikes}/${station.totalSpots}</p>
-              <button onclick="window.open('https://www.google.com/maps/dir/${userLocation?.lat},${userLocation?.lng}/${station.coordinates.lat},${station.coordinates.lng}', '_blank')" class="mt-1 text-xs bg-blue-500 text-white px-2 py-1 rounded">
-                Route Here
-              </button>
-            </div>
-          `);
-
-        new mapboxgl.Marker(bikeMarker)
-          .setLngLat([station.coordinates.lng, station.coordinates.lat])
-          .setPopup(bikePopup)
-          .addTo(map.current!);
-      });
-    });
-  };
-
-  const showPublicTransportOptions = (zone: ParkingZone) => {
-    const nearbyTransport = publicTransport.filter(transport => {
-      // Simple distance calculation to find nearby transport
-      const distance = Math.sqrt(
-        Math.pow(transport.coordinates.lat - zone.coordinates.lat, 2) +
-        Math.pow(transport.coordinates.lng - zone.coordinates.lng, 2)
-      );
-      return distance < 0.01; // Roughly 1km
-    });
-
-    toast({
-      title: "Public Transport Options",
-      description: `Found ${nearbyTransport.length} nearby stops. Check the purple/cyan markers on the map.`
-    });
-  };
-
-  const showBikeStations = (zone: ParkingZone) => {
-    const nearbyBikes = bikeStations.filter(station => {
-      const distance = Math.sqrt(
-        Math.pow(station.coordinates.lat - zone.coordinates.lat, 2) +
-        Math.pow(station.coordinates.lng - zone.coordinates.lng, 2)
-      );
-      return distance < 0.015; // Roughly 1.5km
-    });
-
-    toast({
-      title: "Bike Stations",
-      description: `Found ${nearbyBikes.length} bike stations nearby. Check the orange markers on the map.`
     });
   };
 
   useEffect(() => {
-    getUserLocation();
+    if (propUserLocation) {
+      setUserLocation(propUserLocation);
+    } else {
+      getUserLocation();
+    }
     initializeMap();
     
     return () => {
       map.current?.remove();
     };
-  }, []);
+  }, [propUserLocation]);
+
+  useEffect(() => {
+    if (userLocation && map.current) {
+      const userMarker = document.createElement('div');
+      userMarker.style.cssText = `
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        border: 3px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      `;
+
+      new mapboxgl.Marker(userMarker)
+        .setLngLat([userLocation.lng, userLocation.lat])
+        .addTo(map.current);
+    }
+  }, [userLocation]);
 
   return (
-    <Card className="h-[600px] bg-card/50 backdrop-blur-sm border-slate-700">
+    <Card className="overflow-hidden bg-card/50 backdrop-blur-sm border-slate-700">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <MapPin className="h-5 w-5" />
-          <span>Timișoara Smart Parking</span>
+          <Car className="h-5 w-5" />
+          <span>Parking Map - Timișoara</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative h-full rounded-lg overflow-hidden">
-          <div 
-            ref={mapContainer} 
-            className="absolute inset-0 w-full h-full"
-            style={{ minHeight: '500px' }}
-          />
-          
-          {/* Simplified Legend - Only Parking */}
-          <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 border z-10">
-            <h4 className="font-semibold text-sm mb-2">Parking Legend</h4>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span>Available (50%+)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <span>Limited (20-50%)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span>Full (0-20%)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span>📍 Your Location</span>
-              </div>
+      <CardContent className="p-0">
+        <div ref={mapContainer} className="h-[500px] w-full rounded-lg overflow-hidden" />
+        
+        <div className="p-4 space-y-4">
+          <div className="flex items-center space-x-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-red-500"></div>
+              <span className="text-slate-300">Full/Limited</span>
             </div>
-            <div className="mt-2 pt-2 border-t text-xs text-slate-400">
-              Click parking bubbles to view details
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-amber-500"></div>
+              <span className="text-slate-300">Medium</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-green-500"></div>
+              <span className="text-slate-300">Available</span>
             </div>
           </div>
+          
+          <div className="flex space-x-2">
+            <Button onClick={getUserLocation} variant="outline" size="sm" className="flex-1">
+              <MapPin className="h-4 w-4 mr-2" />
+              Update Location
+            </Button>
+            <Button onClick={() => map.current?.flyTo({ center: [21.2267, 45.7489], zoom: 13 })} variant="outline" size="sm" className="flex-1">
+              <Navigation className="h-4 w-4 mr-2" />
+              Reset View
+            </Button>
+          </div>
+          
+          {selectedZone && (
+            <div className="p-3 bg-slate-800/50 rounded-lg">
+              <h3 className="font-medium text-white mb-1">Selected Zone</h3>
+              <p className="text-sm text-slate-300">
+                {zones.find(z => z.id === selectedZone)?.name}
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

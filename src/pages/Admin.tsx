@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AdminLogin } from "@/components/AdminLogin";
+import { PrivacySettings } from "@/components/PrivacySettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,6 +162,7 @@ const Admin = () => {
           <TabsList className="bg-card/50 backdrop-blur-sm">
             <TabsTrigger value="zones">Parking Zones</TabsTrigger>
             <TabsTrigger value="settings">System Settings</TabsTrigger>
+            <TabsTrigger value="privacy">Privacy Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="zones" className="space-y-6">
@@ -320,6 +322,12 @@ const Admin = () => {
                 <Button>Save Settings</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="privacy">
+            <div className="flex justify-center">
+              <PrivacySettings />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

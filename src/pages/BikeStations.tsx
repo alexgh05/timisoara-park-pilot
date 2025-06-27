@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,38 @@ import { useToast } from "@/hooks/use-toast";
 const BikeStations = () => {
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Încarcă locația automat la inițializare dacă cookie-urile sunt acceptate
+  useEffect(() => {
+    const loadUserLocation = () => {
+      const locationConsent = localStorage.getItem('location-consent');
+      
+      if (locationConsent === 'accepted') {
+        // Încearcă să obții locația dacă utilizatorul a acceptat
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              });
+            },
+            () => {
+              // Folosește locația implicită din Timișoara dacă nu poate obține locația
+              setUserLocation({ lat: 45.7489, lng: 21.2267 });
+            }
+          );
+        } else {
+          setUserLocation({ lat: 45.7489, lng: 21.2267 });
+        }
+      } else {
+        // Folosește locația implicită dacă nu s-a dat consimțământ
+        setUserLocation({ lat: 45.7489, lng: 21.2267 });
+      }
+    };
+
+    loadUserLocation();
+  }, []);
 
   const bikeStations = [
     {
@@ -85,43 +116,18 @@ const BikeStations = () => {
     }
   ];
 
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          toast({
-            title: "Location Found",
-            description: "Your location has been detected for routing"
-          });
-        },
-        () => {
-          setUserLocation({ lat: 45.7489, lng: 21.2267 });
-          toast({
-            title: "Using Default Location",
-            description: "Using Timișoara city center as your location"
-          });
-        }
-      );
-    } else {
-      setUserLocation({ lat: 45.7489, lng: 21.2267 });
-    }
-  };
+
 
   const openGoogleMapsRoute = (destination: { lat: number; lng: number }, destinationName: string) => {
-    if (!userLocation) {
-      getUserLocation();
-      return;
-    }
+    // Folosește locația curentă sau locația implicită din Timișoara
+    const currentLocation = userLocation || { lat: 45.7489, lng: 21.2267 };
     
-    const url = `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${destination.lat},${destination.lng}`;
+    // Adaugă parametrul pentru mers pe jos
+    const url = `https://www.google.com/maps/dir/${currentLocation.lat},${currentLocation.lng}/${destination.lat},${destination.lng}/@${destination.lat},${destination.lng},15z/data=!3m1!4b1!4m2!4m1!3e2`;
     window.open(url, '_blank');
     toast({
-      title: "Route Opened",
-      description: `Opening route to ${destinationName} in Google Maps`
+      title: "Rută pe jos",
+      description: `Deschidere rută pe jos către ${destinationName}`
     });
   };
 
@@ -145,13 +151,7 @@ const BikeStations = () => {
           </p>
         </div>
 
-        {/* Location Button */}
-        <div className="mb-6">
-          <Button onClick={getUserLocation} className="bg-green-600 hover:bg-green-700">
-            <MapPin className="h-4 w-4 mr-2" />
-            Get My Location for Routing
-          </Button>
-        </div>
+
 
         {/* Bike Station Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

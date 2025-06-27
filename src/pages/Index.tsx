@@ -1,14 +1,16 @@
-
 import { useState } from "react";
 import { ParkingMap } from "@/components/ParkingMap";
 import { ParkingStats } from "@/components/ParkingStats";
 import { RouteAlternatives } from "@/components/RouteAlternatives";
 import { ChatBot } from "@/components/ChatBot";
-import { ParkingSpotVisualization } from "@/components/ParkingSpotVisualization";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
-const Index = () => {
+interface IndexProps {
+  userLocation?: { lat: number; lng: number } | null;
+}
+
+const Index = ({ userLocation }: IndexProps) => {
   const [showChat, setShowChat] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
@@ -32,7 +34,7 @@ const Index = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
           {/* Map */}
           <div className="xl:col-span-2">
-            <ParkingMap onZoneSelect={setSelectedZone} />
+            <ParkingMap onZoneSelect={setSelectedZone} userLocation={userLocation} />
           </div>
 
           {/* Route Alternatives */}
@@ -41,10 +43,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Live Parking Spot Visualization */}
-        <div className="mt-6">
-          <ParkingSpotVisualization zoneId={selectedZone} />
-        </div>
+
       </div>
 
       {/* Chat Bot */}

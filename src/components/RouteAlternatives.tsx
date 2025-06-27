@@ -1,8 +1,8 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Car, Bus, Bike, Navigation, Clock, ExternalLink, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, Clock, Navigation, TrendingUp, Bus, Bike, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface RouteAlternativesProps {
   selectedZone: string | null;
@@ -30,66 +30,28 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
     }
   ];
 
-  const publicTransport = [
-    {
-      type: "Bus",
-      line: "Line 11",
-      stop: "Piața Victoriei",
-      time: "3 min",
-      walkToStop: "2 min",
-      link: "https://www.ratt.ro/trasee-si-orare/",
-      route: "Direct to city center"
-    },
-    {
-      type: "Tram",
-      line: "Line 1",
-      stop: "Catedrala",
-      time: "7 min", 
-      walkToStop: "5 min",
-      link: "https://www.ratt.ro/trasee-si-orare/",
-      route: "Historic center route"
-    },
-    {
-      type: "Bus",
-      line: "Line 14",
-      stop: "Universitate",
-      time: "5 min",
-      walkToStop: "3 min", 
-      link: "https://www.ratt.ro/trasee-si-orare/",
-      route: "University district"
-    }
-  ];
-
-  const bikeStations = [
-    {
-      name: "Piața Victoriei Bikes",
-      distance: "300m",
-      walkTime: "4 min",
-      availableBikes: 8,
-      totalSpots: 15,
-      bikeTimeToDestination: "8 min"
-    },
-    {
-      name: "Centrul Vechi Bikes",
-      distance: "600m",
-      walkTime: "7 min",
-      availableBikes: 3,
-      totalSpots: 12,
-      bikeTimeToDestination: "5 min"
-    },
-    {
-      name: "Universitate Bikes",
-      distance: "800m",
-      walkTime: "10 min",
-      availableBikes: 12,
-      totalSpots: 20,
-      bikeTimeToDestination: "12 min"
-    }
-  ];
-
   const openGoogleMapsRoute = (destination: string) => {
-    const baseUrl = "https://www.google.com/maps/search/";
-    window.open(`${baseUrl}${encodeURIComponent(destination + " Timișoara")}`, '_blank');
+    // Verifică dacă utilizatorul a acceptat locația
+    const locationConsent = localStorage.getItem('location-consent');
+    
+    if (locationConsent === 'accepted' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Folosește locația reală pentru navigare
+          const url = `https://www.google.com/maps/dir/${position.coords.latitude},${position.coords.longitude}/${encodeURIComponent(destination + " Timișoara")}`;
+          window.open(url, '_blank');
+        },
+        () => {
+          // Fallback la căutare simplă dacă nu poate obține locația
+          const baseUrl = "https://www.google.com/maps/search/";
+          window.open(`${baseUrl}${encodeURIComponent(destination + " Timișoara")}`, '_blank');
+        }
+      );
+    } else {
+      // Folosește căutare simplă dacă nu s-a acceptat locația
+      const baseUrl = "https://www.google.com/maps/search/";
+      window.open(`${baseUrl}${encodeURIComponent(destination + " Timișoara")}`, '_blank');
+    }
   };
 
   return (
@@ -142,97 +104,46 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
         </CardContent>
       </Card>
 
-      {/* Public Transport */}
+      {/* Transport Alternatives */}
       <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Bus className="h-5 w-5" />
-            <span>Public Transport</span>
+            <TrendingUp className="h-5 w-5" />
+            <span>Other Transport Options</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-slate-400 mb-3">
-            🚫 Parking full? Use public transport:
+            🚫 Parking full? Try alternative transport:
           </p>
-          {publicTransport.map((transport, index) => (
-            <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium">{transport.line}</h3>
-                <Badge variant="outline">{transport.type}</Badge>
-              </div>
-              <div className="text-sm text-slate-400 space-y-1">
-                <div className="flex justify-between">
-                  <span>Stop: {transport.stop}</span>
-                  <span>🚶 {transport.walkToStop}</span>
+          
+          <div className="grid grid-cols-1 gap-3">
+            <Link to="/public-transport">
+              <Button variant="outline" className="w-full h-auto p-3 justify-start">
+                <div className="flex items-center space-x-3">
+                  <Bus className="h-5 w-5 text-purple-400" />
+                  <div className="text-left">
+                    <div className="font-medium">Public Transport</div>
+                    <div className="text-xs text-slate-400">Bus & Tram options</div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Next arrival: {transport.time}</span>
-                  <span className="text-xs">{transport.route}</span>
-                </div>
-              </div>
-              <div className="flex space-x-2 mt-2">
-                <Button
-                  className="flex-1"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(transport.link, '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  Schedule
-                </Button>
-                <Button
-                  className="flex-1"
-                  size="sm"
-                  onClick={() => openGoogleMapsRoute(transport.stop)}
-                >
-                  🗺️ Route
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Bike Stations */}
-      <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Bike className="h-5 w-5" />
-            <span>Bike Stations</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-slate-400 mb-3">
-            🚲 Eco-friendly alternative when parking is full:
-          </p>
-          {bikeStations.map((station, index) => (
-            <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium text-sm">{station.name}</h3>
-                <Badge variant={station.availableBikes > 5 ? "default" : station.availableBikes > 0 ? "secondary" : "destructive"}>
-                  {station.availableBikes > 5 ? "Available" : station.availableBikes > 0 ? "Limited" : "Full"}
-                </Badge>
-              </div>
-              <div className="text-sm text-slate-400 space-y-1">
-                <div className="flex justify-between">
-                  <span>🚲 {station.availableBikes}/{station.totalSpots} bikes</span>
-                  <span>🚶 {station.walkTime} to station</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>📍 {station.distance}</span>
-                  <span>🚴 {station.bikeTimeToDestination} to destination</span>
-                </div>
-              </div>
-              <Button 
-                className="w-full mt-2" 
-                size="sm"
-                disabled={station.availableBikes === 0}
-                onClick={() => openGoogleMapsRoute(station.name)}
-              >
-                {station.availableBikes > 0 ? "🗺️ Route to Bikes" : "No Bikes Available"}
+                <ExternalLink className="h-4 w-4 ml-auto" />
               </Button>
-            </div>
-          ))}
+            </Link>
+            
+            <Link to="/bike-stations">
+              <Button variant="outline" className="w-full h-auto p-3 justify-start">
+                <div className="flex items-center space-x-3">
+                  <Bike className="h-5 w-5 text-orange-400" />
+                  <div className="text-left">
+                    <div className="font-medium">Bike Stations</div>
+                    <div className="text-xs text-slate-400">Eco-friendly bikes</div>
+                  </div>
+                </div>
+                <ExternalLink className="h-4 w-4 ml-auto" />
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
 
@@ -248,19 +159,23 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
           <div className="text-sm text-slate-400 space-y-2">
             <div className="flex items-start space-x-2">
               <span>💡</span>
-              <span>Combine transport: Walk to bike station → Bike to destination</span>
+              <span>Try alternative parking zones first - often closer than expected</span>
             </div>
             <div className="flex items-start space-x-2">
               <span>⏰</span>
-              <span>Peak hours (6-8 PM): Public transport is faster than driving</span>
+              <span>Peak hours (7-9 AM, 5-7 PM): Consider public transport</span>
             </div>
             <div className="flex items-start space-x-2">
               <span>🌍</span>
-              <span>Eco-friendly: Bikes reduce CO2 and parking stress</span>
+              <span>Eco-tip: Bike + walk combination reduces traffic</span>
             </div>
             <div className="flex items-start space-x-2">
               <span>📱</span>
               <span>All routes open in Google Maps with live traffic</span>
+            </div>
+            <div className="flex items-start space-x-2">
+              <span>🅿️</span>
+              <span>Shopping centers often have the most available spots</span>
             </div>
           </div>
         </CardContent>

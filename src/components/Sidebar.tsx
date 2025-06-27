@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Car, BarChart3, Settings, Phone, Menu, X, Moon, Sun, Bus, Bike } from "lucide-react";
+import { Car, BarChart3, Settings, Phone, Menu, X, Moon, Sun, Bus, Bike, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ export const Sidebar = () => {
 
   const navItems = [
     { href: "/", label: "Parking Map", icon: Car },
+    { href: "/live-parking", label: "Live Parking", icon: Activity },
     { href: "/public-transport", label: "Public Transport", icon: Bus },
     { href: "/bike-stations", label: "Bike Stations", icon: Bike },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },

@@ -54,12 +54,12 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
     if (lowerMessage.includes('transport') || lowerMessage.includes('bus') || lowerMessage.includes('tram')) {
       return {
         id: Date.now().toString(),
-        text: 'Public Transport Options in Timișoara: 🚌 Bus Line 11 (Piața Victoriei, next: 3 min), 🚌 Bus Line 14 (Universitate, next: 5 min), 🚋 Tram Line 1 (Catedrala, next: 7 min). I can show you routes from your location to any of these stops!',
+        text: 'Check out our dedicated Public Transport page for real-time bus and tram information! 🚌 Bus lines with next arrivals, 🚋 Tram schedules, 🗺️ Route planning from your location. Click the link below to explore all options.',
         sender: 'bot',
         timestamp: new Date(),
         links: [
-          { text: 'RATT Bus Schedules', url: 'https://www.ratt.ro/trasee-si-orare/' },
-          { text: 'Real-time Arrivals', url: 'https://www.ratt.ro/info-trafic/' }
+          { text: 'View Public Transport Options', url: '/public-transport' },
+          { text: 'RATT Official Schedules', url: 'https://www.ratt.ro/trasee-si-orare/' }
         ]
       };
     }
@@ -67,9 +67,12 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
     if (lowerMessage.includes('bike') || lowerMessage.includes('bicycle')) {
       return {
         id: Date.now().toString(),
-        text: 'Bike Stations Available: 🚲 Piața Victoriei (8/15 bikes), 🚲 Centrul Vechi (3/12 bikes), 🚲 Universitate (12/20 bikes). Bikes are perfect for short trips when parking is full. I can route you to the nearest station with available bikes!',
+        text: 'Visit our Bike Stations page for complete bike sharing information! 🚲 Real-time bike availability, ⚡ Electric bike locations, 🗺️ Routes to stations, and usage tips. Perfect eco-friendly alternative when parking is full!',
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: [
+          { text: 'View Bike Stations', url: '/bike-stations' }
+        ]
       };
     }
     
@@ -85,27 +88,39 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
     if (lowerMessage.includes('alternative') || lowerMessage.includes('options')) {
       return {
         id: Date.now().toString(),
-        text: 'Smart Alternatives when parking is full: 1️⃣ Alternative Parking (Bega Shopping: 156 spots, Iulius Mall: 267 spots), 2️⃣ Public Transport (3-7 min wait times), 3️⃣ Bike Stations (3-12 bikes available), 4️⃣ Walking + Public Transport combo. Which option interests you?',
+        text: 'Smart Alternatives when parking is full: 1️⃣ Alternative Parking (Bega Shopping: 156 spots, Iulius Mall: 267 spots), 2️⃣ Public Transport (dedicated page with live updates), 3️⃣ Bike Stations (dedicated page with real-time availability), 4️⃣ Walking + Transport combos. Need specific directions?',
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: [
+          { text: 'Public Transport Options', url: '/public-transport' },
+          { text: 'Bike Station Locations', url: '/bike-stations' }
+        ]
       };
     }
     
     if (lowerMessage.includes('victoriei')) {
       return {
         id: Date.now().toString(),
-        text: 'Piața Victoriei is currently FULL (0/120 spots). Alternatives: 🚌 Bus Line 11 stop is 50m away (next: 3 min), 🚲 Bike station has 8 available bikes, or 🅿️ Try Bega Shopping (15 min walk, 156 spots available). Which would you prefer?',
+        text: 'Piața Victoriei is currently FULL (0/120 spots). Alternatives: 🚌 Check Public Transport page for Bus Line 11 details, 🚲 Visit Bike Stations page for nearby bikes, or 🅿️ Try Bega Shopping (15 min walk, 156 spots available). Which option works best?',
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: [
+          { text: 'Public Transport', url: '/public-transport' },
+          { text: 'Bike Stations', url: '/bike-stations' }
+        ]
       };
     }
     
     if (lowerMessage.includes('universitate')) {
       return {
         id: Date.now().toString(),
-        text: 'Universitate parking is FULL (0/75 spots). Great alternatives: 🚲 Best bike station here (12/20 bikes), 🚌 Bus Line 14 (next: 5 min), or 🅿️ Iulius Mall parking (10 min by bus, 267 spots). The bike option is very popular with students!',
+        text: 'Universitate parking is FULL (0/75 spots). Great alternatives: 🚲 Check our Bike Stations page (very popular with students!), 🚌 View Public Transport page for Bus Line 14, or 🅿️ Iulius Mall parking (10 min by bus, 267 spots). Students love the bike option!',
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: [
+          { text: 'Bike Stations', url: '/bike-stations' },
+          { text: 'Public Transport', url: '/public-transport' }
+        ]
       };
     }
     
@@ -120,9 +135,13 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
     
     return {
       id: Date.now().toString(),
-      text: 'I can help you with: 🅿️ Real-time parking availability, 🚌 Public transport alternatives (bus/tram), 🚲 Bike station locations, 🗺️ Google Maps routing, 📍 Smart alternatives when parking is full. Try asking "What if parking is full?" or "Show me transport options".',
+      text: 'I can help you with: 🅿️ Real-time parking availability, 🚌 Public transport (dedicated page), 🚲 Bike stations (dedicated page), 🗺️ Google Maps routing, 📍 Smart alternatives when parking is full. Try asking "What if parking is full?" or check our transport pages!',
       sender: 'bot',
-      timestamp: new Date()
+      timestamp: new Date(),
+      links: [
+        { text: 'Public Transport', url: '/public-transport' },
+        { text: 'Bike Stations', url: '/bike-stations' }
+      ]
     };
   };
 

@@ -13,9 +13,10 @@ interface ParkingSpot {
 
 interface ParkingSpotVisualizationProps {
   zoneId?: string;
+  isLive?: boolean;
 }
 
-export const ParkingSpotVisualization = ({ zoneId }: ParkingSpotVisualizationProps) => {
+export const ParkingSpotVisualization = ({ zoneId, isLive = true }: ParkingSpotVisualizationProps) => {
   const [spots, setSpots] = useState<ParkingSpot[]>([
     // Horizontal spots (top row)
     { id: "H1", isOccupied: false, orientation: 'horizontal', position: { x: 15, y: 20 } },
@@ -32,6 +33,8 @@ export const ParkingSpotVisualization = ({ zoneId }: ParkingSpotVisualizationPro
 
   // Simulate real-time updates from embedded system
   useEffect(() => {
+    if (!isLive) return;
+    
     const interval = setInterval(() => {
       setSpots(prevSpots => 
         prevSpots.map(spot => ({
@@ -42,7 +45,7 @@ export const ParkingSpotVisualization = ({ zoneId }: ParkingSpotVisualizationPro
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isLive]);
 
   const availableSpots = spots.filter(spot => !spot.isOccupied).length;
   const totalSpots = spots.length;
