@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { AdminLogin } from "@/components/AdminLogin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ interface ParkingZone {
 
 const Admin = () => {
   const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [zones, setZones] = useState<ParkingZone[]>([
     {
       id: "1",
@@ -54,6 +55,14 @@ const Admin = () => {
     totalSpots: '',
     address: ''
   });
+
+  const handleLogin = (success: boolean) => {
+    setIsAuthenticated(success);
+  };
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={handleLogin} />;
+  }
 
   const handleAddZone = () => {
     if (!formData.name || !formData.totalSpots || !formData.address) {
@@ -135,9 +144,17 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="container mx-auto">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-slate-300">Manage parking zones and system settings</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
+            <p className="text-slate-300">Manage parking zones and system settings</p>
+          </div>
+          <button
+            onClick={() => setIsAuthenticated(false)}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+          >
+            Logout
+          </button>
         </div>
 
         <Tabs defaultValue="zones" className="space-y-6">

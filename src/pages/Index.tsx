@@ -4,6 +4,7 @@ import { ParkingMap } from "@/components/ParkingMap";
 import { ParkingStats } from "@/components/ParkingStats";
 import { RouteAlternatives } from "@/components/RouteAlternatives";
 import { ChatBot } from "@/components/ChatBot";
+import { ParkingSpotVisualization } from "@/components/ParkingSpotVisualization";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
@@ -38,6 +39,11 @@ const Index = () => {
           <div className="xl:col-span-1">
             <RouteAlternatives selectedZone={selectedZone} />
           </div>
+        </div>
+
+        {/* Live Parking Spot Visualization */}
+        <div className="mt-6">
+          <ParkingSpotVisualization zoneId={selectedZone} />
         </div>
       </div>
 
