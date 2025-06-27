@@ -160,3 +160,67 @@
 .mapboxgl-marker {
   transform-origin: center bottom !important;
 }
+
+/* Custom scrollbar styles for chat component */
+.chat-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scrollable::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.chat-scrollable::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+}
+
+.chat-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Touch scrolling improvements */
+.chat-scrollable {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  /* Show scrollbar on mobile for better UX */
+  scrollbar-width: auto;
+}
+
+/* Mobile specific scrollbar improvements */
+@media (max-width: 768px) {
+  .chat-scrollable::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  .chat-scrollable::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 6px;
+  }
+}
+
+/* Ensure text wrapping in chat messages */
+.chat-message-text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Additional chat container improvements */
+.chat-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #64748b #1e293b;
+}
+
+/* Ensure chat messages don't exceed container width */
+.chat-message-container {
+  max-width: 100%;
+  overflow: hidden;
+}
