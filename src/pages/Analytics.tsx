@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Activity, Clock, BarChart3, PieChart as RechartsPieChart, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ParkingHeatmap } from "@/components/ParkingHeatmap";
 
 const Analytics = () => {
   const { t, language } = useLanguage();
@@ -291,6 +292,11 @@ const Analytics = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Parking Heatmap */}
+        <div className="mt-8">
+          <ParkingHeatmap />
         </div>
 
         {/* Zone Details */}

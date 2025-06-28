@@ -1,0 +1,64 @@
+#define TRIG1 14
+#define ECHO1 22
+
+#define TRIG2 27
+#define ECHO2 26
+
+#define TRIG3 25
+#define ECHO3 33
+
+#define TRIG4 32
+#define ECHO4 34
+
+#define TRIG5 4
+#define ECHO5 2
+
+#define TRIG6 17
+#define ECHO6 16
+
+#define TRIG7 5
+#define ECHO7 18
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(TRIG1, OUTPUT); pinMode(ECHO1, INPUT);
+  pinMode(TRIG2, OUTPUT); pinMode(ECHO2, INPUT);
+  pinMode(TRIG3, OUTPUT); pinMode(ECHO3, INPUT);
+  pinMode(TRIG4, OUTPUT); pinMode(ECHO4, INPUT);
+  pinMode(TRIG5, OUTPUT); pinMode(ECHO5, INPUT);
+  pinMode(TRIG6, OUTPUT); pinMode(ECHO6, INPUT);
+  pinMode(TRIG7, OUTPUT); pinMode(ECHO7, INPUT);
+}
+
+float readDistance(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 30000);
+  if (duration == 0) return -1;
+  return duration * 0.034 / 2;
+}
+
+void loop() {
+  float d1 = readDistance(TRIG1, ECHO1);
+  float d2 = readDistance(TRIG2, ECHO2);
+  float d3 = readDistance(TRIG3, ECHO3);
+  float d4 = readDistance(TRIG4, ECHO4);
+  float d5 = readDistance(TRIG5, ECHO5);
+  float d6 = readDistance(TRIG6, ECHO6);
+  float d7 = readDistance(TRIG7, ECHO7);
+
+  Serial.print("S1: "); Serial.print(d1); Serial.print(" cm | ");
+  Serial.print("S2: "); Serial.print(d2); Serial.print(" cm | ");
+  Serial.print("S3: "); Serial.print(d3); Serial.print(" cm | ");
+  Serial.print("S4: "); Serial.print(d4); Serial.print(" cm | ");
+  Serial.print("S5: "); Serial.print(d5); Serial.print(" cm | ");
+  Serial.print("S6: "); Serial.print(d6); Serial.print(" cm | ");
+  Serial.print("S7: "); Serial.print(d7); Serial.println(" cm");
+
+  delay(500);
+}
