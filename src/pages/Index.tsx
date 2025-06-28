@@ -3,8 +3,9 @@ import { ParkingMap } from "@/components/ParkingMap";
 import { ParkingStats } from "@/components/ParkingStats";
 import { RouteAlternatives } from "@/components/RouteAlternatives";
 import { ChatBot } from "@/components/ChatBot";
+import { ParkingHeatmap } from "@/components/ParkingHeatmap";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Moon, Sun, Languages } from "lucide-react";
+import { MessageCircle, Moon, Sun, Languages, Map, BarChart3 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -15,6 +16,7 @@ interface IndexProps {
 const Index = ({ userLocation }: IndexProps) => {
   const [showChat, setShowChat] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'map' | 'heatmap'>('map');
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
 
@@ -42,6 +44,28 @@ const Index = ({ userLocation }: IndexProps) => {
           
           {/* Control Buttons */}
           <div className="flex items-center space-x-2">
+            {/* View Mode Toggle */}
+            <div className="flex bg-card/20 backdrop-blur-sm border border-slate-700 rounded-lg p-1">
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('map')}
+                className="h-8"
+              >
+                <Map className="h-4 w-4 mr-2" />
+                {language === 'ro' ? 'Hartă' : 'Map'}
+              </Button>
+              <Button
+                variant={viewMode === 'heatmap' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('heatmap')}
+                className="h-8"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                {language === 'ro' ? 'Heatmap' : 'Heatmap'}
+              </Button>
+            </div>
+            
             {/* Language Toggle */}
             <Button
               variant="outline"
@@ -74,9 +98,13 @@ const Index = ({ userLocation }: IndexProps) => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
-          {/* Map */}
+          {/* Map or Heatmap */}
           <div className="xl:col-span-2">
-            <ParkingMap onZoneSelect={setSelectedZone} userLocation={userLocation} />
+            {viewMode === 'map' ? (
+              <ParkingMap onZoneSelect={setSelectedZone} userLocation={userLocation} />
+            ) : (
+              <ParkingHeatmap />
+            )}
           </div>
 
           {/* Route Alternatives */}
