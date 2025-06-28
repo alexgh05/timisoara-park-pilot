@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Circle } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdminLoginProps {
   onLogin: (success: boolean) => void;
@@ -18,6 +18,7 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,14 +28,14 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     setTimeout(() => {
       if (credentials.username === 'admin' && credentials.password === 'parking123') {
         toast({
-          title: "Login Successful",
-          description: "Welcome to the admin dashboard"
+          title: t('adminLogin.successTitle'),
+          description: t('adminLogin.successDescription')
         });
         onLogin(true);
       } else {
         toast({
-          title: "Login Failed",
-          description: "Invalid username or password",
+          title: t('adminLogin.errorTitle'),
+          description: t('adminLogin.errorDescription'),
           variant: "destructive"
         });
         onLogin(false);
@@ -61,34 +62,34 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-slate-700">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            Admin Login
+            {t('adminLogin.title')}
           </CardTitle>
           <p className="text-slate-400 mt-2">
-            Access the parking management dashboard
+            {t('adminLogin.subtitle')}
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t('adminLogin.username')}</Label>
               <Input
                 id="username"
                 type="text"
                 value={credentials.username}
                 onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                placeholder="Enter username"
+                placeholder={t('adminLogin.usernameLabel')}
                 required
               />
             </div>
             
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('adminLogin.password')}</Label>
               <Input
                 id="password"
                 type="password"
                 value={credentials.password}
                 onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                placeholder="Enter password"
+                placeholder={t('adminLogin.passwordLabel')}
                 required
               />
             </div>
@@ -98,15 +99,15 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
               className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? t('adminLogin.signingIn') : t('adminLogin.signIn')}
             </Button>
           </form>
 
           <div className="mt-6 p-3 bg-slate-800/50 rounded-lg">
             <p className="text-xs text-slate-400 text-center">
-              Demo credentials:<br />
-              Username: <span className="text-slate-300">admin</span><br />
-              Password: <span className="text-slate-300">parking123</span>
+              {t('adminLogin.demoCredentials')}<br />
+              {t('adminLogin.username')}: <span className="text-slate-300">admin</span><br />
+              {t('adminLogin.password')}: <span className="text-slate-300">parking123</span>
             </p>
           </div>
         </CardContent>

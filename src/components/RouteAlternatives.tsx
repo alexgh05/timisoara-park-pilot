@@ -3,19 +3,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Car, Clock, Navigation, TrendingUp, Bus, Bike, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RouteAlternativesProps {
   selectedZone: string | null;
 }
 
 export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
+  const { t, language } = useLanguage();
+
   const parkingAlternatives = [
     {
       name: "Bega Shopping Center",
       distance: "1.2km",
       walkTime: "15 min",
       driveTime: "8 min",
-      availability: "Good",
+      availability: t('routes.good'),
       spots: "156/300",
       status: "available"
     },
@@ -24,7 +27,7 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
       distance: "2.1km",
       walkTime: "25 min",
       driveTime: "12 min",
-      availability: "Excellent",
+      availability: t('routes.excellent'),
       spots: "267/450",
       status: "available"
     }
@@ -61,7 +64,7 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Car className="h-5 w-5" />
-            <span>Alternative Parking</span>
+            <span>{t('routes.alternativeParking')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -69,7 +72,7 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
             <div key={index} className="p-3 bg-slate-800/50 rounded-lg">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium">{alt.name}</h3>
-                <Badge variant={alt.availability === "Excellent" ? "default" : "secondary"}>
+                <Badge variant={alt.availability === t('routes.excellent') ? "default" : "secondary"}>
                   {alt.availability}
                 </Badge>
               </div>
@@ -87,7 +90,7 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
                 <div className="flex items-center justify-between">
                   <span className="flex items-center space-x-1">
                     <Car className="h-3 w-3" />
-                    <span>{alt.spots} available</span>
+                    <span>{alt.spots} {t('routes.available')}</span>
                   </span>
                   <span className="text-xs">🚶 {alt.walkTime}</span>
                 </div>
@@ -97,7 +100,7 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
                 size="sm"
                 onClick={() => openGoogleMapsRoute(alt.name)}
               >
-                🗺️ Navigate Here
+                🗺️ {t('routes.navigateHere')}
               </Button>
             </div>
           ))}
@@ -109,12 +112,12 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <TrendingUp className="h-5 w-5" />
-            <span>Other Transport Options</span>
+            <span>{t('routes.otherTransportOptions')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-slate-400 mb-3">
-            🚫 Parking full? Try alternative transport:
+            🚫 {t('routes.parkingFull')}
           </p>
           
           <div className="grid grid-cols-1 gap-3">
@@ -123,8 +126,8 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
                 <div className="flex items-center space-x-3">
                   <Bus className="h-5 w-5 text-purple-400" />
                   <div className="text-left">
-                    <div className="font-medium">Public Transport</div>
-                    <div className="text-xs text-slate-400">Bus & Tram options</div>
+                    <div className="font-medium">{t('routes.transportPublic')}</div>
+                    <div className="text-xs text-slate-400">{t('routes.busAndTram')}</div>
                   </div>
                 </div>
                 <ExternalLink className="h-4 w-4 ml-auto" />
@@ -136,8 +139,8 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
                 <div className="flex items-center space-x-3">
                   <Bike className="h-5 w-5 text-orange-400" />
                   <div className="text-left">
-                    <div className="font-medium">Bike Stations</div>
-                    <div className="text-xs text-slate-400">Eco-friendly bikes</div>
+                    <div className="font-medium">{t('routes.bikeStations')}</div>
+                    <div className="text-xs text-slate-400">{t('routes.ecoFriendlyBikes')}</div>
                   </div>
                 </div>
                 <ExternalLink className="h-4 w-4 ml-auto" />
@@ -152,30 +155,55 @@ export const RouteAlternatives = ({ selectedZone }: RouteAlternativesProps) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <TrendingUp className="h-5 w-5" />
-            <span>Smart Tips</span>
+            <span>{t('routes.smartTips')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-sm text-slate-400 space-y-2">
             <div className="flex items-start space-x-2">
               <span>💡</span>
-              <span>Try alternative parking zones first - often closer than expected</span>
+              <span>
+                {language === 'ro' 
+                  ? 'Încearcă întâi zonele alternative de parcare - adesea sunt mai aproape decât te aștepți'
+                  : 'Try alternative parking zones first - often closer than expected'
+                }
+              </span>
             </div>
             <div className="flex items-start space-x-2">
               <span>⏰</span>
-              <span>Peak hours (7-9 AM, 5-7 PM): Consider public transport</span>
+              <span>
+                {language === 'ro' 
+                  ? 'Ore de vârf (7-9 AM, 17-19): Consideră transportul public'
+                  : 'Peak hours (7-9 AM, 5-7 PM): Consider public transport'
+                }
+              </span>
             </div>
             <div className="flex items-start space-x-2">
               <span>🌍</span>
-              <span>Eco-tip: Bike + walk combination reduces traffic</span>
+              <span>
+                {language === 'ro' 
+                  ? 'Sfat eco: Combinația bicicletă + mers pe jos reduce traficul'
+                  : 'Eco-tip: Bike + walk combination reduces traffic'
+                }
+              </span>
             </div>
             <div className="flex items-start space-x-2">
               <span>📱</span>
-              <span>All routes open in Google Maps with live traffic</span>
+              <span>
+                {language === 'ro' 
+                  ? 'Toate rutele se deschid în Google Maps cu trafic live'
+                  : 'All routes open in Google Maps with live traffic'
+                }
+              </span>
             </div>
             <div className="flex items-start space-x-2">
               <span>🅿️</span>
-              <span>Shopping centers often have the most available spots</span>
+              <span>
+                {language === 'ro' 
+                  ? 'Centrele comerciale au de obicei cele mai multe locuri disponibile'
+                  : 'Shopping centers often have the most available spots'
+                }
+              </span>
             </div>
           </div>
         </CardContent>

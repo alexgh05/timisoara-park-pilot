@@ -1,28 +1,33 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Car, BarChart3, Settings, Phone, Menu, X, Moon, Sun, Bus, Bike, Activity } from "lucide-react";
+import { Car, BarChart3, Settings, Phone, Menu, X, Moon, Sun, Bus, Bike, Activity, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 export const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
 
   const navItems = [
-    { href: "/", label: "Parking Map", icon: Car },
-    { href: "/live-parking", label: "Live Parking", icon: Activity },
-    { href: "/public-transport", label: "Public Transport", icon: Bus },
-    { href: "/bike-stations", label: "Bike Stations", icon: Bike },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/admin", label: "Admin", icon: Settings },
-    { href: "/contact", label: "Contact", icon: Phone },
+    { href: "/", label: t('nav.parkingMap'), icon: Car },
+    { href: "/live-parking", label: t('nav.liveParking'), icon: Activity },
+    { href: "/public-transport", label: t('nav.publicTransport'), icon: Bus },
+    { href: "/bike-stations", label: t('nav.bikeStations'), icon: Bike },
+    { href: "/analytics", label: t('nav.analytics'), icon: BarChart3 },
+    { href: "/admin", label: t('nav.admin'), icon: Settings },
+    { href: "/contact", label: t('nav.contact'), icon: Phone },
   ];
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'ro' ? 'en' : 'ro');
   };
 
   return (
@@ -51,7 +56,7 @@ export const Sidebar = () => {
               <Car className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-xl font-bold">ParkSmart</h1>
-                <p className="text-sm text-muted-foreground">Timișoara Parking</p>
+                <p className="text-sm text-muted-foreground">Parcare Timișoara</p>
               </div>
             </div>
           </div>
@@ -80,8 +85,20 @@ export const Sidebar = () => {
             })}
           </nav>
 
-          {/* Theme toggle */}
-          <div className="p-4 border-t">
+          {/* Controls */}
+          <div className="p-4 border-t space-y-2">
+            {/* Language toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleLanguage}
+              className="w-full justify-start"
+            >
+              <Languages className="h-4 w-4 mr-2" />
+              {language === 'ro' ? t('nav.english') : t('nav.romanian')}
+            </Button>
+            
+            {/* Theme toggle */}
             <Button
               variant="ghost"
               size="sm"
@@ -93,7 +110,7 @@ export const Sidebar = () => {
               ) : (
                 <Moon className="h-4 w-4 mr-2" />
               )}
-              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              {theme === "dark" ? t('nav.lightMode') : t('nav.darkMode')}
             </Button>
           </div>
         </div>
