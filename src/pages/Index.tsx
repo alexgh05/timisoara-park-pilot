@@ -4,7 +4,9 @@ import { ParkingStats } from "@/components/ParkingStats";
 import { RouteAlternatives } from "@/components/RouteAlternatives";
 import { ChatBot } from "@/components/ChatBot";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Moon, Sun, Languages } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface IndexProps {
   userLocation?: { lat: number; lng: number } | null;
@@ -13,18 +15,58 @@ interface IndexProps {
 const Index = ({ userLocation }: IndexProps) => {
   const [showChat, setShowChat] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const { t, language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'ro' ? 'en' : 'ro');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Timișoara Smart Parking
-          </h1>
-          <p className="text-slate-300">
-            Real-time parking availability and intelligent route planning
-          </p>
+        {/* Header with Controls */}
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {t('home.title')}
+            </h1>
+            <p className="text-slate-300">
+              {t('home.subtitle')}
+            </p>
+          </div>
+          
+          {/* Control Buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Language Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleLanguage}
+              className="bg-card/50 backdrop-blur-sm border-slate-700"
+            >
+              <Languages className="h-4 w-4 mr-2" />
+              {language === 'ro' ? 'EN' : 'RO'}
+            </Button>
+            
+            {/* Theme Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleTheme}
+              className="bg-card/50 backdrop-blur-sm border-slate-700"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -42,8 +84,6 @@ const Index = ({ userLocation }: IndexProps) => {
             <RouteAlternatives selectedZone={selectedZone} />
           </div>
         </div>
-
-
       </div>
 
       {/* Chat Bot */}

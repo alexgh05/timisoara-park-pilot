@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bike, Navigation, MapPin, Clock, Zap } from "lucide-react";
+import { Bike, Navigation, MapPin, Clock, Zap, Battery } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const BikeStations = () => {
   const { toast } = useToast();
+  const { t, language } = useLanguage();
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Încarcă locația automat la inițializare dacă cookie-urile sunt acceptate
@@ -43,190 +45,271 @@ const BikeStations = () => {
 
   const bikeStations = [
     {
-      id: "bike-1",
-      name: "Piața Victoriei Bikes",
-      coordinates: { lat: 45.7490, lng: 21.2270 },
-      availableBikes: 8,
-      totalSpots: 15,
-      electricBikes: 3,
-      distance: "300m",
-      walkTime: "4 min",
-      bikeTimeToDestination: "8 min",
-      status: "operational" as const
-    },
-    {
-      id: "bike-2",
-      name: "Centrul Vechi Bikes",
-      coordinates: { lat: 45.7540, lng: 21.2248 },
-      availableBikes: 3,
-      totalSpots: 12,
-      electricBikes: 1,
-      distance: "600m",
-      walkTime: "7 min",
-      bikeTimeToDestination: "5 min",
-      status: "operational" as const
-    },
-    {
-      id: "bike-3",
-      name: "Universitate Bikes",
-      coordinates: { lat: 45.7470, lng: 21.2078 },
+      id: 1,
+      name: 'Piața Unirii',
+      location: language === 'ro' ? 'Centrul Istoric' : 'Historic Center',
       availableBikes: 12,
-      totalSpots: 20,
-      electricBikes: 4,
-      distance: "800m",
-      walkTime: "10 min",
-      bikeTimeToDestination: "12 min",
-      status: "operational" as const
+      totalCapacity: 20,
+      distance: '0.3 km',
+      status: 'available',
+      type: 'standard',
+      lastMaintenance: language === 'ro' ? '2 zile' : '2 days'
     },
     {
-      id: "bike-4",
-      name: "Bega Shopping Bikes",
-      coordinates: { lat: 45.7415, lng: 21.2398 },
-      availableBikes: 0,
-      totalSpots: 18,
-      electricBikes: 0,
-      distance: "1.2km",
-      walkTime: "15 min",
-      bikeTimeToDestination: "18 min",
-      status: "maintenance" as const
+      id: 2,
+      name: 'Bega Shopping Center',
+      location: language === 'ro' ? 'Zona Comercială' : 'Shopping Area',
+      availableBikes: 8,
+      totalCapacity: 25,
+      distance: '1.2 km',
+      status: 'available',
+      type: 'electric',
+      lastMaintenance: language === 'ro' ? '1 zi' : '1 day'
     },
     {
-      id: "bike-5",
-      name: "Iulius Mall Bikes",
-      coordinates: { lat: 45.7308, lng: 21.2267 },
+      id: 3,
+      name: 'Universitatea Politehnica',
+      location: 'Campus UPT',
       availableBikes: 15,
-      totalSpots: 25,
-      electricBikes: 6,
-      distance: "2.1km",
-      walkTime: "25 min",
-      bikeTimeToDestination: "22 min",
-      status: "operational" as const
+      totalCapacity: 30,
+      distance: '2.1 km',
+      status: 'available',
+      type: 'mixed',
+      lastMaintenance: language === 'ro' ? '3 ore' : '3 hours'
     },
     {
-      id: "bike-6",
-      name: "Parcul Central Bikes",
-      coordinates: { lat: 45.7520, lng: 21.2300 },
-      availableBikes: 7,
-      totalSpots: 16,
-      electricBikes: 2,
-      distance: "1.5km",
-      walkTime: "18 min",
-      bikeTimeToDestination: "15 min",
-      status: "operational" as const
+      id: 4,
+      name: 'Parcul Central',
+      location: language === 'ro' ? 'Zona Verde' : 'Green Zone',
+      availableBikes: 3,
+      totalCapacity: 15,
+      distance: '0.8 km',
+      status: 'limited',
+      type: 'standard',
+      lastMaintenance: language === 'ro' ? '4 ore' : '4 hours'
+    },
+    {
+      id: 5,
+      name: 'Gara de Nord',
+      location: language === 'ro' ? 'Zona Transport' : 'Transport Hub',
+      availableBikes: 0,
+      totalCapacity: 20,
+      distance: '1.8 km',
+      status: 'empty',
+      type: 'electric',
+      lastMaintenance: language === 'ro' ? '30 min' : '30 min'
+    },
+    {
+      id: 6,
+      name: 'Iulius Mall',
+      location: language === 'ro' ? 'Zona Comercială' : 'Shopping Area',
+      availableBikes: 0,
+      totalCapacity: 25,
+      distance: '2.5 km',
+      status: 'maintenance',
+      type: 'mixed',
+      lastMaintenance: language === 'ro' ? 'În curs' : 'Ongoing'
     }
   ];
 
-
-
-  const openGoogleMapsRoute = (destination: { lat: number; lng: number }, destinationName: string) => {
-    // Folosește locația curentă sau locația implicită din Timișoara
-    const currentLocation = userLocation || { lat: 45.7489, lng: 21.2267 };
-    
-    // Adaugă parametrul pentru mers pe jos
-    const url = `https://www.google.com/maps/dir/${currentLocation.lat},${currentLocation.lng}/${destination.lat},${destination.lng}/@${destination.lat},${destination.lng},15z/data=!3m1!4b1!4m2!4m1!3e2`;
-    window.open(url, '_blank');
-    toast({
-      title: "Rută pe jos",
-      description: `Deschidere rută pe jos către ${destinationName}`
-    });
+  const getStatusBadge = (status: string, availableBikes: number) => {
+    switch (status) {
+      case 'available':
+        return <Badge className="bg-green-500">{language === 'ro' ? 'Disponibil' : 'Available'}</Badge>;
+      case 'limited':
+        return <Badge className="bg-yellow-500">{language === 'ro' ? 'Limitat' : 'Limited'}</Badge>;
+      case 'empty':
+        return <Badge className="bg-red-500">{language === 'ro' ? 'Gol' : 'Empty'}</Badge>;
+      case 'maintenance':
+        return <Badge variant="secondary">{language === 'ro' ? 'Mentenanță' : 'Maintenance'}</Badge>;
+      default:
+        return <Badge variant="outline">{language === 'ro' ? 'Necunoscut' : 'Unknown'}</Badge>;
+    }
   };
 
-  const getAvailabilityBadge = (station: typeof bikeStations[0]) => {
-    if (station.status === "maintenance") return { variant: "destructive" as const, text: "Maintenance" };
-    if (station.availableBikes === 0) return { variant: "destructive" as const, text: "Empty" };
-    if (station.availableBikes <= 3) return { variant: "secondary" as const, text: "Limited" };
-    return { variant: "default" as const, text: "Available" };
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'electric':
+        return <Zap className="h-4 w-4 text-blue-500" />;
+      case 'standard':
+        return <Bike className="h-4 w-4 text-gray-500" />;
+      case 'mixed':
+        return <Battery className="h-4 w-4 text-purple-500" />;
+      default:
+        return <Bike className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const openInMaps = (stationName: string) => {
+    const query = `${stationName} stație biciclete Timișoara`;
+    window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}`, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Bike Stations - Timișoara
+            {language === 'ro' ? 'Stații Biciclete' : 'Bike Stations'}
           </h1>
           <p className="text-slate-300">
-            Real-time bike sharing information and eco-friendly transport
+            {language === 'ro' 
+              ? 'Rețeaua de bike-sharing din Timișoara cu disponibilitate în timp real'
+              : 'Timișoara bike-sharing network with real-time availability'
+            }
           </p>
         </div>
 
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">
+                {language === 'ro' ? 'Total Stații' : 'Total Stations'}
+              </CardTitle>
+              <MapPin className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{bikeStations.length}</div>
+              <p className="text-xs text-slate-400">
+                {language === 'ro' ? 'în oraș' : 'citywide'}
+              </p>
+            </CardContent>
+          </Card>
 
+          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">
+                {language === 'ro' ? 'Biciclete Disponibile' : 'Available Bikes'}
+              </CardTitle>
+              <Bike className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {bikeStations.reduce((sum, station) => sum + station.availableBikes, 0)}
+              </div>
+              <p className="text-xs text-green-500">
+                {language === 'ro' ? 'gata de folosit' : 'ready to use'}
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Bike Station Cards */}
+          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">
+                {language === 'ro' ? 'Capacitate Totală' : 'Total Capacity'}
+              </CardTitle>
+              <Battery className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {bikeStations.reduce((sum, station) => sum + station.totalCapacity, 0)}
+              </div>
+              <p className="text-xs text-slate-400">
+                {language === 'ro' ? 'locuri total' : 'total spots'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-300">
+                {language === 'ro' ? 'Utilizare' : 'Usage Rate'}
+              </CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">73%</div>
+              <p className="text-xs text-orange-500">
+                {language === 'ro' ? 'astăzi' : 'today'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Bike Stations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bikeStations.map((station) => {
-            const badge = getAvailabilityBadge(station);
+            const occupancyPercentage = Math.round((station.availableBikes / station.totalCapacity) * 100);
+            
             return (
               <Card key={station.id} className="bg-card/50 backdrop-blur-sm border-slate-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Bike className="h-5 w-5" />
-                      <span className="text-sm">{station.name}</span>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg flex items-center space-x-2">
+                        {getTypeIcon(station.type)}
+                        <span>{station.name}</span>
+                      </CardTitle>
+                      <p className="text-sm text-slate-400">{station.location}</p>
                     </div>
-                    <Badge variant={badge.variant}>
-                      {badge.text}
-                    </Badge>
-                  </CardTitle>
+                    {getStatusBadge(station.status, station.availableBikes)}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center space-x-1">
-                        <Bike className="h-3 w-3" />
-                        <span>Available bikes:</span>
-                      </span>
-                      <span className="font-medium text-green-400">
-                        {station.availableBikes}/{station.totalSpots}
-                      </span>
+                  {/* Availability Display */}
+                  <div className="text-center">
+                    <div className={`text-3xl font-bold ${
+                      station.availableBikes > 5 ? 'text-green-500' :
+                      station.availableBikes > 2 ? 'text-yellow-500' : 'text-red-500'
+                    }`}>
+                      {station.availableBikes}
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      {language === 'ro' ? 'biciclete disponibile' : 'bikes available'}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {station.totalCapacity} {language === 'ro' ? 'capacitate totală' : 'total capacity'} ({occupancyPercentage}%)
+                    </p>
                     </div>
                     
-                    {station.electricBikes > 0 && (
-                      <div className="flex justify-between">
-                        <span className="flex items-center space-x-1">
-                          <Zap className="h-3 w-3" />
-                          <span>Electric bikes:</span>
-                        </span>
-                        <span className="text-blue-400">{station.electricBikes}</span>
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="w-full bg-slate-700 rounded-full h-3">
+                      <div 
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          occupancyPercentage > 60 ? 'bg-green-500' :
+                          occupancyPercentage > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${occupancyPercentage}%` }}
+                      />
+                    </div>
                       </div>
-                    )}
                     
+                  {/* Station Details */}
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Distance:</span>
-                      <span className="text-slate-300">{station.distance}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="flex items-center space-x-1">
-                        <Clock className="h-3 w-3" />
-                        <span>Walk to station:</span>
+                      <span className="text-slate-400">
+                        {language === 'ro' ? 'Distanță:' : 'Distance:'}
                       </span>
-                      <span className="text-slate-300">{station.walkTime}</span>
+                      <span className="text-white">{station.distance}</span>
                     </div>
-                    
                     <div className="flex justify-between">
-                      <span>Bike to destination:</span>
-                      <span className="text-slate-300">{station.bikeTimeToDestination}</span>
+                      <span className="text-slate-400">
+                        {language === 'ro' ? 'Tip:' : 'Type:'}
+                      </span>
+                      <span className="text-white capitalize">
+                        {station.type === 'electric' ? (language === 'ro' ? 'Electrice' : 'Electric') :
+                         station.type === 'standard' ? (language === 'ro' ? 'Standard' : 'Standard') :
+                         (language === 'ro' ? 'Mixte' : 'Mixed')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">
+                        {language === 'ro' ? 'Ultima verificare:' : 'Last check:'}
+                      </span>
+                      <span className="text-white">{station.lastMaintenance}</span>
                     </div>
                   </div>
 
+                  {/* Navigation Button */}
                   <Button 
                     className="w-full" 
-                    size="sm"
-                    disabled={station.availableBikes === 0 || station.status === "maintenance"}
-                    onClick={() => openGoogleMapsRoute(station.coordinates, station.name)}
+                    variant="outline"
+                    onClick={() => openInMaps(station.name)}
                   >
-                    {station.status === "maintenance" ? (
-                      "Under Maintenance"
-                    ) : station.availableBikes === 0 ? (
-                      "No Bikes Available"
-                    ) : (
-                      <>
-                        <Navigation className="h-3 w-3 mr-1" />
-                        Route to Station
-                      </>
-                    )}
+                    <Navigation className="h-4 w-4 mr-2" />
+                    {language === 'ro' ? 'Navighează Aici' : 'Navigate Here'}
                   </Button>
                 </CardContent>
               </Card>
@@ -234,34 +317,97 @@ const BikeStations = () => {
           })}
         </div>
 
-        {/* Info Section */}
-        <Card className="mt-8 bg-card/50 backdrop-blur-sm border-slate-700">
+        {/* Usage Instructions */}
+        <div className="mt-8">
+          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
           <CardHeader>
-            <CardTitle>Bike Sharing Information</CardTitle>
+              <CardTitle>
+                {language === 'ro' ? 'Cum Să Folosești Bicicletele' : 'How to Use the Bikes'}
+              </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
-              <div>
-                <h4 className="font-medium text-white mb-2">🚲 How to Use</h4>
-                <ul className="space-y-1">
-                  <li>• Download the bike sharing app</li>
-                  <li>• Register and add payment method</li>
-                  <li>• Unlock bike with QR code or app</li>
-                  <li>• Return to any station when done</li>
-                </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="text-center space-y-2">
+                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <span className="text-xl font-bold text-primary">1</span>
+                  </div>
+                  <h4 className="font-semibold text-white">
+                    {language === 'ro' ? 'Înregistrează-te' : 'Sign Up'}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {language === 'ro' 
+                      ? 'Descarcă aplicația TimBike și creează un cont'
+                      : 'Download the TimBike app and create an account'
+                    }
+                  </p>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <span className="text-xl font-bold text-primary">2</span>
+                  </div>
+                  <h4 className="font-semibold text-white">
+                    {language === 'ro' ? 'Scanează QR' : 'Scan QR Code'}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {language === 'ro' 
+                      ? 'Scanează codul QR de pe bicicletă pentru deblocare'
+                      : 'Scan the QR code on the bike to unlock'
+                    }
+                  </p>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <span className="text-xl font-bold text-primary">3</span>
+                  </div>
+                  <h4 className="font-semibold text-white">
+                    {language === 'ro' ? 'Mergi cu Plăcere' : 'Enjoy Your Ride'}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {language === 'ro' 
+                      ? 'Urmează traseele recomandate și fii în siguranță'
+                      : 'Follow recommended routes and stay safe'
+                    }
+                  </p>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
+                    <span className="text-xl font-bold text-primary">4</span>
+                  </div>
+                  <h4 className="font-semibold text-white">
+                    {language === 'ro' ? 'Returnează' : 'Return'}
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    {language === 'ro' 
+                      ? 'Lasă bicicleta la orice stație disponibilă'
+                      : 'Drop off the bike at any available station'
+                    }
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-medium text-white mb-2">💡 Tips</h4>
-                <ul className="space-y-1">
-                  <li>• Electric bikes cost more but go further</li>
-                  <li>• Check station capacity before arriving</li>
-                  <li>• Wear a helmet for safety</li>
-                  <li>• Follow bike lanes and traffic rules</li>
-                </ul>
-              </div>
+
+              <div className="mt-8 pt-6 border-t border-slate-700">
+                <h4 className="font-semibold text-white mb-4">
+                  {language === 'ro' ? 'Informații Importante' : 'Important Information'}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-400">
+                  <div className="space-y-2">
+                    <p>• {language === 'ro' ? 'Preț: 2 RON/oră sau 25 RON/zi' : 'Price: 2 RON/hour or 25 RON/day'}</p>
+                    <p>• {language === 'ro' ? 'Prima 30 min gratuită pentru studenți' : 'First 30 min free for students'}</p>
+                    <p>• {language === 'ro' ? 'Casca inclusă și obligatorie' : 'Helmet included and mandatory'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p>• {language === 'ro' ? 'Serviciu disponibil 24/7' : 'Service available 24/7'}</p>
+                    <p>• {language === 'ro' ? 'Suport tehnic: 0256-123-456' : 'Technical support: 0256-123-456'}</p>
+                    <p>• {language === 'ro' ? 'App: iOS și Android' : 'App: iOS and Android'}</p>
+                  </div>
+                </div>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

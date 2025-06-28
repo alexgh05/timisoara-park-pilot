@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Contact = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,8 +23,8 @@ const Contact = () => {
     
     if (!formData.name || !formData.email || !formData.message) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t('contact.errorTitle'),
+        description: t('contact.errorDescription'),
         variant: "destructive"
       });
       return;
@@ -31,8 +32,8 @@ const Contact = () => {
 
     // Simulate form submission
     toast({
-      title: "Message Sent",
-      description: "Thank you for your message. We'll get back to you soon!",
+      title: t('contact.successTitle'),
+      description: t('contact.successDescription'),
     });
 
     setFormData({ name: '', email: '', subject: '', message: '' });
@@ -46,9 +47,9 @@ const Contact = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="container mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Contact Us</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">{t('contact.title')}</h1>
           <p className="text-slate-300">
-            Get in touch with our team for support, partnerships, or feedback
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -58,52 +59,52 @@ const Contact = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Send className="h-5 w-5" />
-                <span>Send us a Message</span>
+                <span>{t('contact.sendMessage')}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t('contact.name')} *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Your full name"
+                      placeholder={t('contact.nameRequired')}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">{t('contact.email')} *</Label>
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="your@email.com"
+                      placeholder={t('contact.emailRequired')}
                       required
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <Label htmlFor="subject">Subject</Label>
+                  <Label htmlFor="subject">{t('contact.subject')}</Label>
                   <Input
                     id="subject"
                     value={formData.subject}
                     onChange={(e) => handleInputChange('subject', e.target.value)}
-                    placeholder="Brief description of your inquiry"
+                    placeholder={t('contact.subjectPlaceholder')}
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="message">Message *</Label>
+                  <Label htmlFor="message">{t('contact.message')} *</Label>
                   <Textarea
                     id="message"
                     value={formData.message}
                     onChange={(e) => handleInputChange('message', e.target.value)}
-                    placeholder="Tell us how we can help you..."
+                    placeholder={t('contact.messagePlaceholder')}
                     rows={6}
                     required
                   />
@@ -111,7 +112,7 @@ const Contact = () => {
                 
                 <Button type="submit" className="w-full">
                   <Send className="h-4 w-4 mr-2" />
-                  Send Message
+                  {t('contact.sendButton')}
                 </Button>
               </form>
             </CardContent>
@@ -122,7 +123,7 @@ const Contact = () => {
             {/* Contact Details */}
             <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
+                <CardTitle>{t('contact.information')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -130,9 +131,9 @@ const Contact = () => {
                     <Phone className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Phone</h3>
+                    <h3 className="font-semibold text-white">{t('contact.phone')}</h3>
                     <p className="text-slate-300">+40 256 123 456</p>
-                    <p className="text-slate-400 text-sm">Mon-Fri, 8:00 AM - 6:00 PM</p>
+                    <p className="text-slate-400 text-sm">{t('contact.timeScheduleMF')}</p>
                   </div>
                 </div>
 
@@ -141,9 +142,9 @@ const Contact = () => {
                     <Mail className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Email</h3>
+                    <h3 className="font-semibold text-white">{t('contact.email')}</h3>
                     <p className="text-slate-300">support@parksmart.ro</p>
-                    <p className="text-slate-400 text-sm">We'll respond within 24 hours</p>
+                    <p className="text-slate-400 text-sm">{t('contact.responseTime')}</p>
                   </div>
                 </div>
 
@@ -152,11 +153,11 @@ const Contact = () => {
                     <MapPin className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Address</h3>
+                    <h3 className="font-semibold text-white">{t('contact.address')}</h3>
                     <p className="text-slate-300">
                       Strada Popa Șapcă 15<br />
                       300057 Timișoara<br />
-                      Romania
+                      România
                     </p>
                   </div>
                 </div>
@@ -168,26 +169,26 @@ const Contact = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Clock className="h-5 w-5" />
-                  <span>Business Hours</span>
+                  <span>{t('contact.businessHours')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-slate-300">Monday - Friday</span>
-                    <span className="text-white font-medium">8:00 AM - 6:00 PM</span>
+                    <span className="text-slate-300">{t('contact.mondayFriday')}</span>
+                    <span className="text-white font-medium">{t('contact.timeSchedule')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-300">Saturday</span>
-                    <span className="text-white font-medium">9:00 AM - 2:00 PM</span>
+                    <span className="text-slate-300">{t('contact.saturday')}</span>
+                    <span className="text-white font-medium">{t('contact.timeScheduleSat')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-300">Sunday</span>
-                    <span className="text-slate-400">Closed</span>
+                    <span className="text-slate-300">{t('contact.sunday')}</span>
+                    <span className="text-slate-400">{t('contact.closed')}</span>
                   </div>
                   <div className="pt-3 border-t border-slate-600">
                     <p className="text-sm text-slate-400">
-                      Emergency support available 24/7 for system-critical issues
+                      {t('contact.emergencySupport')}
                     </p>
                   </div>
                 </div>
@@ -197,25 +198,25 @@ const Contact = () => {
             {/* FAQ */}
             <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
               <CardHeader>
-                <CardTitle>Frequently Asked Questions</CardTitle>
+                <CardTitle>{t('contact.faq')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-white mb-2">How accurate is the parking data?</h4>
+                  <h4 className="font-semibold text-white mb-2">{t('contact.faq1.question')}</h4>
                   <p className="text-sm text-slate-400">
-                    Our sensors update parking availability in real-time with 99.5% accuracy.
+                    {t('contact.faq1.answer')}
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white mb-2">Can I reserve a parking spot?</h4>
+                  <h4 className="font-semibold text-white mb-2">{t('contact.faq2.question')}</h4>
                   <p className="text-sm text-slate-400">
-                    Currently, we provide availability information. Reservation features are coming soon.
+                    {t('contact.faq2.answer')}
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white mb-2">Is there a mobile app?</h4>
+                  <h4 className="font-semibold text-white mb-2">{t('contact.faq3.question')}</h4>
                   <p className="text-sm text-slate-400">
-                    The web app is mobile-responsive. Native apps are in development.
+                    {t('contact.faq3.answer')}
                   </p>
                 </div>
               </CardContent>

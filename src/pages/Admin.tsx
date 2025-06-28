@@ -7,16 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, MapPin, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Settings, LogOut, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ParkingZone {
   id: string;
   name: string;
   totalSpots: number;
-  availableSpots: number;
+  occupiedSpots: number;
   address: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'maintenance' | 'offline';
 }
 
 const Admin = () => {
@@ -68,8 +69,8 @@ const Admin = () => {
   const handleAddZone = () => {
     if (!formData.name || !formData.totalSpots || !formData.address) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
+        title: "Eroare",
+        description: "Te rugăm să completezi toate câmpurile",
         variant: "destructive"
       });
       return;
@@ -89,8 +90,8 @@ const Admin = () => {
     setShowAddForm(false);
     
     toast({
-      title: "Success",
-      description: "Parking zone added successfully"
+      title: "Succes",
+      description: "Zona de parcare adăugată cu succes"
     });
   };
 
@@ -121,16 +122,16 @@ const Admin = () => {
     setFormData({ name: '', totalSpots: '', address: '' });
     
     toast({
-      title: "Success",
-      description: "Parking zone updated successfully"
+      title: "Succes",
+      description: "Zona de parcare actualizată cu succes"
     });
   };
 
   const handleDeleteZone = (id: string) => {
     setZones(zones.filter(zone => zone.id !== id));
     toast({
-      title: "Success",
-      description: "Parking zone deleted successfully"
+      title: "Succes",
+      description: "Zona de parcare ștearsă cu succes"
     });
   };
 
@@ -172,28 +173,28 @@ const Admin = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Plus className="h-5 w-5" />
-                    <span>{editingZone ? 'Edit Zone' : 'Add New Zone'}</span>
+                    <span>{editingZone ? 'Editează Zona' : 'Adaugă Zonă Nouă'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Zone Name</Label>
+                      <Label htmlFor="name">Numele Zonei</Label>
                       <Input
                         id="name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter zone name"
+                        placeholder="Introdu numele zonei"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="totalSpots">Total Spots</Label>
+                      <Label htmlFor="totalSpots">Total Locuri</Label>
                       <Input
                         id="totalSpots"
                         type="number"
                         value={formData.totalSpots}
                         onChange={(e) => setFormData({ ...formData, totalSpots: e.target.value })}
-                        placeholder="Enter total spots"
+                        placeholder="Introdu numărul total de locuri"
                       />
                     </div>
                   </div>

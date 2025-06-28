@@ -1,34 +1,36 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Car, MapPin, TrendingUp, Clock } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const ParkingStats = () => {
+  const { t } = useLanguage();
+  
   const stats = [
     {
-      title: "Total Parking Spots",
+      title: t('stats.totalSpots'),
       value: "1,030",
-      change: "+12 this week",
+      change: `+12 ${t('stats.thisWeek')}`,
       icon: Car,
       color: "text-blue-500"
     },
     {
-      title: "Available Now",
+      title: t('stats.availableNow'),
       value: "496",
-      change: "48.2% occupancy",
+      change: `48.2% ${t('stats.occupancy')}`,
       icon: MapPin,
       color: "text-green-500"
     },
     {
-      title: "Active Zones",
+      title: t('stats.activeZones'),
       value: "5",
-      change: "All operational",
+      change: t('stats.allOperational'),
       icon: TrendingUp,
       color: "text-purple-500"
     },
     {
-      title: "Avg. Wait Time",
+      title: t('stats.avgWaitTime'),
       value: "12 min",
-      change: "-3 min from yesterday",
+      change: `-3 min ${t('stats.fromYesterday')}`,
       icon: Clock,
       color: "text-orange-500"
     }

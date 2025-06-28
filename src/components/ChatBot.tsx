@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X, Send, Bot, User, ExternalLink, MapPin, Navigation } from "lucide-react";
 import { aiService, type ChatMessage } from "@/services/aiService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -20,16 +21,17 @@ interface ChatBotProps {
 }
 
 export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: '🤖 Hello! I\'m your AI-powered Smart Parking Assistant for Timișoara! I have real-time access to all parking zones, live spot availability, and can provide intelligent recommendations.\n\n✨ Ask me anything about:\n• Current parking availability\n• Best alternative routes when zones are full\n• Public transport connections\n• Bike sharing options\n• Navigation and directions\n\nI can see that right now we have 425 total available spots across the city. What can I help you find?',
+      text: t('chatbot.welcomeMessage'),
       sender: 'bot',
       timestamp: new Date(),
       links: [
-        { text: '🗺️ View Parking Map', url: '/' },
-        { text: '🚌 Public Transport', url: '/public-transport' },
-        { text: '🚲 Bike Stations', url: '/bike-stations' }
+        { text: t('chatbot.viewParkingMap'), url: '/' },
+        { text: t('chatbot.viewPublicTransport'), url: '/public-transport' },
+        { text: t('chatbot.viewBikeStations'), url: '/bike-stations' }
       ]
     }
   ]);
@@ -44,6 +46,23 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages([
+      {
+        id: '1',
+        text: t('chatbot.welcomeMessage'),
+        sender: 'bot',
+        timestamp: new Date(),
+        links: [
+          { text: t('chatbot.viewParkingMap'), url: '/' },
+          { text: t('chatbot.viewPublicTransport'), url: '/public-transport' },
+          { text: t('chatbot.viewBikeStations'), url: '/bike-stations' }
+        ]
+      }
+    ]);
+  }, [t]);
 
   const generateAIResponse = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<Message> => {
     try {
@@ -63,7 +82,7 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
         const zone = bestZones.find(z => z.name === 'Bega Shopping Center');
         if (zone) {
           links.push({
-            text: `🗺️ Navigate to ${zone.name}`,
+            text: `🗺️ ${t('chatbot.navigateTo')} ${zone.name}`,
             url: `https://www.google.com/maps/dir//${zone.coordinates.lat.toFixed(6)},${zone.coordinates.lng.toFixed(6)}`
           });
         }
@@ -73,7 +92,7 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
         const zone = bestZones.find(z => z.name === 'Iulius Mall');
         if (zone) {
           links.push({
-            text: `🗺️ Navigate to ${zone.name}`,
+            text: `🗺️ ${t('chatbot.navigateTo')} ${zone.name}`,
             url: `https://www.google.com/maps/dir//${zone.coordinates.lat.toFixed(6)},${zone.coordinates.lng.toFixed(6)}`
           });
         }
@@ -81,11 +100,11 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
 
       // Add app navigation links for transport and bikes
       if (lowerResponse.includes('public transport') || lowerResponse.includes('bus') || lowerResponse.includes('tram')) {
-        links.push({ text: '🚌 View Public Transport', url: '/public-transport' });
+        links.push({ text: `🚌 ${t('chatbot.viewPublicTransport')}`, url: '/public-transport' });
       }
       
       if (lowerResponse.includes('bike') || lowerResponse.includes('bicycle')) {
-        links.push({ text: '🚲 View Bike Stations', url: '/bike-stations' });
+        links.push({ text: `🚲 ${t('chatbot.viewBikeStations')}`, url: '/bike-stations' });
       }
 
       return {
@@ -99,12 +118,12 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
       console.error('AI Response Error:', error);
       return {
         id: Date.now().toString(),
-        text: 'I\'m having trouble connecting to the AI service right now. Please try again in a moment. In the meantime, you can check our parking map for real-time availability!',
+        text: t('chatbot.errorMessage'),
         sender: 'bot',
         timestamp: new Date(),
         links: [
-          { text: '🚌 Public Transport', url: '/public-transport' },
-          { text: '🚲 Bike Stations', url: '/bike-stations' }
+          { text: t('chatbot.viewPublicTransport'), url: '/public-transport' },
+          { text: t('chatbot.viewBikeStations'), url: '/bike-stations' }
         ]
       };
     }
@@ -138,7 +157,7 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
       console.error('Error generating response:', error);
       const errorResponse: Message = {
         id: Date.now().toString(),
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: t('chatbot.genericError'),
         sender: 'bot',
         timestamp: new Date()
       };
@@ -162,7 +181,7 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Bot className="h-5 w-5 text-primary" />
-            <span>Smart Parking Assistant</span>
+            <span>{t('chatbot.title')}</span>
           </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -242,7 +261,7 @@ export const ChatBot = ({ isOpen, onClose }: ChatBotProps) => {
           <div className="p-4 border-t flex-shrink-0 bg-card">
             <div className="flex space-x-2">
               <Input
-                placeholder="Ask about parking, transport, bikes, or routes..."
+                placeholder={t('chatbot.placeholder')}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
