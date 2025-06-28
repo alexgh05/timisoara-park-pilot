@@ -1,10 +1,13 @@
 interface ParkingZone {
   id: string;
   name: string;
-  address: string;
+  street: string;
+  number: string;
+  city: string;
+  country: string;
   totalSpots: number;
   availableSpots: number;
-  coordinates: { lat: number; lng: number };
+  coordinates?: { lat: number; lng: number };
   color: string;
   description: string;
 }
@@ -21,114 +24,181 @@ interface ChatMessage {
   content: string;
 }
 
+interface APIResponse {
+  address: string;
+  numberOfSpots: number;
+  availablePlaces?: number; // Available places from server
+  latitude: number;
+  longitude: number;
+  type: string;
+}
+
+// Function to fetch parking zones from API
+const fetchParkingZones = async (): Promise<APIResponse[]> => {
+  try {
+    const response = await fetch('/api/parking');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('AI Service - Raw API response:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch parking zones:', error);
+    throw error;
+  }
+};
+
+// Function to parse address and map API data to ParkingZone
+const mapAPIDataToParkingZone = (apiData: APIResponse, index: number): ParkingZone => {
+  // Parse address - try to extract street number and name
+  const addressParts = apiData.address.split(' ');
+  let street = '';
+  let number = '';
+  
+  // Look for "Nr" pattern or try to find number at the end
+  const nrIndex = addressParts.findIndex(part => part.toLowerCase().includes('nr'));
+  if (nrIndex !== -1 && nrIndex + 1 < addressParts.length) {
+    street = addressParts.slice(0, nrIndex).join(' ');
+    number = addressParts[nrIndex + 1];
+  } else {
+    // Try to find a number at the end
+    const lastPart = addressParts[addressParts.length - 1];
+    if (/^\d+$/.test(lastPart)) {
+      number = lastPart;
+      street = addressParts.slice(0, -1).join(' ');
+    } else {
+      street = apiData.address;
+      number = '1'; // Default number
+    }
+  }
+
+  // Use actual available places from server, or default to numberOfSpots if not provided
+  const availableSpots = apiData.availablePlaces !== undefined ? apiData.availablePlaces : apiData.numberOfSpots;
+  
+  // Set color based on type and availability
+  const availabilityPercentage = (availableSpots / apiData.numberOfSpots) * 100;
+  let colorHex = '#22c55e'; // Default green
+  
+  if (apiData.type === 'red' || availableSpots === 0) {
+    colorHex = '#ef4444'; // Red
+  } else if (apiData.type === 'yellow' || availabilityPercentage < 30) {
+    colorHex = '#f59e0b'; // Yellow/Orange
+  } else if (apiData.type === 'green' || availabilityPercentage >= 50) {
+    colorHex = '#22c55e'; // Green
+  }
+  
+  return {
+    id: `api-zone-${index}`,
+    name: street,
+    street: street,
+    number: number,
+    city: 'Timișoara',
+    country: 'Romania',
+    totalSpots: apiData.numberOfSpots,
+    availableSpots: availableSpots,
+    coordinates: {
+      lat: apiData.latitude,
+      lng: apiData.longitude
+    },
+    color: colorHex,
+    description: `${street} - ${availableSpots}/${apiData.numberOfSpots} spots available`
+  };
+};
+
 class AIService {
   private apiKey = 'sk-4bc8de3429e244eb98086553df2e584f';
   private baseUrl = 'https://api.deepseek.com/v1/chat/completions';
 
-  // Parking data - synchronized with the main app
-  private parkingZones: ParkingZone[] = [
-    {
-      id: "zone-1",
-      name: "Piața Victoriei",
-      address: "Piața Victoriei, Timișoara, Romania",
-      totalSpots: 120,
-      availableSpots: 0,
-      coordinates: { lat: 45.7494, lng: 21.2272 },
-      color: "#ef4444",
-      description: "Central square with premium parking spots"
-    },
-    {
-      id: "zone-2", 
-      name: "Centrul Vechi",
-      address: "Piața Unirii, Timișoara, Romania",
-      totalSpots: 85,
-      availableSpots: 2,
-      coordinates: { lat: 45.7536, lng: 21.2251 },
-      color: "#ef4444",
-      description: "Historic center with limited access"
-    },
-    {
-      id: "zone-3",
-      name: "Bega Shopping Center",
-      address: "Piața Consiliul Europei 2, Timișoara, Romania",
-      totalSpots: 300,
-      availableSpots: 156,
-      coordinates: { lat: 45.7415, lng: 21.2398 },
-      color: "#22c55e",
-      description: "Large shopping center parking facility"
-    },
-    {
-      id: "zone-4",
-      name: "Universitate",
-      address: "Bulevardul Vasile Pârvan 4, Timișoara, Romania",
-      totalSpots: 75,
-      availableSpots: 0,
-      coordinates: { lat: 45.7472, lng: 21.2081 },
-      color: "#ef4444",
-      description: "University area with student parking"
-    },
-    {
-      id: "zone-5",
-      name: "Iulius Mall",
-      address: "Strada Alexandru Odobescu 2, Timișoara, Romania",
-      totalSpots: 450,
-      availableSpots: 267,
-      coordinates: { lat: 45.7308, lng: 21.2267 },
-      color: "#22c55e",
-      description: "Premium mall with multi-level parking"
+  // Parking data - will be loaded from API
+  private parkingZones: ParkingZone[] = [];
+  private liveSpots: ParkingSpot[] = [];
+  private isDataLoaded = false;
+
+  // Load parking zones from API
+  private async loadParkingZones() {
+    if (this.isDataLoaded) return;
+    
+    try {
+      const apiData = await fetchParkingZones();
+      this.parkingZones = apiData.map((zone, index) => mapAPIDataToParkingZone(zone, index));
+      this.isDataLoaded = true;
+      console.log('AI Service loaded parking zones from API:', this.parkingZones);
+    } catch (error) {
+      console.error('AI Service: Error loading parking zones from API:', error);
+      // Use fallback data
+      this.parkingZones = [
+        {
+          id: "fallback-1",
+          name: "Piața Victoriei",
+          street: "Piața Victoriei",
+          number: "1",
+          city: "Timișoara",
+          country: "Romania",
+          totalSpots: 120,
+          availableSpots: 0,
+          coordinates: { lat: 45.7607, lng: 21.2268 },
+          color: "#ef4444",
+          description: "Central square with premium parking spots"
+        }
+      ];
+      this.isDataLoaded = true;
     }
-  ];
+  }
 
-  private liveParkingSpots: ParkingSpot[] = [
-    { id: "H1", isOccupied: false, orientation: 'horizontal', position: { x: 15, y: 20 } },
-    { id: "H2", isOccupied: true, orientation: 'horizontal', position: { x: 35, y: 20 } },
-    { id: "H3", isOccupied: false, orientation: 'horizontal', position: { x: 55, y: 20 } },
-    { id: "H4", isOccupied: true, orientation: 'horizontal', position: { x: 75, y: 20 } },
-    { id: "V1", isOccupied: false, orientation: 'diagonal', position: { x: 20, y: 80 } },
-    { id: "V2", isOccupied: true, orientation: 'diagonal', position: { x: 35, y: 80 } },
-    { id: "V3", isOccupied: false, orientation: 'diagonal', position: { x: 50, y: 80 } },
-    { id: "V4", isOccupied: false, orientation: 'diagonal', position: { x: 65, y: 80 } },
-  ];
+  updateParkingData(zones: ParkingZone[], spots?: ParkingSpot[]) {
+    this.parkingZones = zones;
+    if (spots) {
+      this.liveSpots = spots;
+    }
+  }
 
-  getParkingContext(): string {
+  async getParkingContext(): Promise<string> {
+    // Ensure data is loaded from API
+    await this.loadParkingZones();
+    
     const totalSpots = this.parkingZones.reduce((sum, zone) => sum + zone.totalSpots, 0);
     const totalAvailable = this.parkingZones.reduce((sum, zone) => sum + zone.availableSpots, 0);
-    const occupancyRate = ((totalSpots - totalAvailable) / totalSpots * 100).toFixed(1);
-
+    const occupancyRate = Math.round(((totalSpots - totalAvailable) / totalSpots) * 100);
+    
     const availableZones = this.parkingZones.filter(zone => zone.availableSpots > 0);
     const fullZones = this.parkingZones.filter(zone => zone.availableSpots === 0);
-
-    const liveSpotsSummary = this.liveParkingSpots.reduce((acc, spot) => {
-      acc.total++;
-      if (!spot.isOccupied) acc.available++;
-      return acc;
-    }, { total: 0, available: 0 });
+    
+    const liveSpotsSummary = {
+      total: this.liveSpots.length,
+      available: this.liveSpots.filter(spot => !spot.isOccupied).length
+    };
 
     return `
-CURRENT PARKING SITUATION IN TIMIȘOARA:
+CURRENT PARKING SITUATION IN TIMIȘOARA (Real-time API data):
 
 OVERVIEW:
 - Total parking spots: ${totalSpots}
 - Currently available: ${totalAvailable}
 - Occupancy rate: ${occupancyRate}%
 - Time: ${new Date().toLocaleTimeString()}
+- Data source: Live API (/api/parking)
 
 PARKING ZONES STATUS:
 
 AVAILABLE ZONES:
 ${availableZones.map(zone => 
   `• ${zone.name}: ${zone.availableSpots}/${zone.totalSpots} spots available
-    Address: ${zone.address}
+    Address: ${zone.street} ${zone.number}, ${zone.city}, ${zone.country}
     Description: ${zone.description}
+    Type: ${zone.color}
     Availability: ${zone.availableSpots > zone.totalSpots * 0.5 ? 'Good' : zone.availableSpots > zone.totalSpots * 0.2 ? 'Limited' : 'Almost Full'}
-    Coordinates: ${zone.coordinates.lat}, ${zone.coordinates.lng}`
+    Coordinates: ${zone.coordinates?.lat || 'N/A'}, ${zone.coordinates?.lng || 'N/A'}`
 ).join('\n')}
 
 ${fullZones.length > 0 ? `FULL ZONES:
 ${fullZones.map(zone => 
   `• ${zone.name}: 0/${zone.totalSpots} spots (FULL)
-    Address: ${zone.address}
-    Description: ${zone.description}`
+    Address: ${zone.street} ${zone.number}, ${zone.city}, ${zone.country}
+    Description: ${zone.description}
+    Type: ${zone.color}`
 ).join('\n')}` : ''}
 
 LIVE PARKING ZONE DETAILS:
@@ -147,7 +217,7 @@ You are a helpful parking assistant for Timișoara. Use this real-time data to:
 5. Explain parking regulations and payment methods
 6. Suggest bike sharing or public transport when parking is limited
 
-Always be helpful, accurate, and provide actionable suggestions based on current availability.
+Always be helpful, accurate, and provide actionable suggestions based on current availability from the live API data.
 `;
   }
 
@@ -155,7 +225,7 @@ Always be helpful, accurate, and provide actionable suggestions based on current
     try {
       const systemMessage = {
         role: 'system' as const,
-        content: this.getParkingContext()
+        content: await this.getParkingContext()
       };
 
       const response = await fetch(this.baseUrl, {
@@ -185,14 +255,6 @@ Always be helpful, accurate, and provide actionable suggestions based on current
     }
   }
 
-  // Method to update parking data (called from main app when data changes)
-  updateParkingData(zones: ParkingZone[], liveSpots?: ParkingSpot[]) {
-    this.parkingZones = zones;
-    if (liveSpots) {
-      this.liveParkingSpots = liveSpots;
-    }
-  }
-
   // Get specific zone information
   getZoneInfo(zoneId: string): ParkingZone | null {
     return this.parkingZones.find(zone => zone.id === zoneId) || null;
@@ -207,11 +269,11 @@ Always be helpful, accurate, and provide actionable suggestions based on current
 
   // Get live parking summary
   getLiveParkingSummary() {
-    const available = this.liveParkingSpots.filter(spot => !spot.isOccupied);
-    const occupied = this.liveParkingSpots.filter(spot => spot.isOccupied);
+    const available = this.liveSpots.filter(spot => !spot.isOccupied);
+    const occupied = this.liveSpots.filter(spot => spot.isOccupied);
     
     return {
-      total: this.liveParkingSpots.length,
+      total: this.liveSpots.length,
       available: available.length,
       occupied: occupied.length,
       availableSpots: available.map(spot => spot.id),

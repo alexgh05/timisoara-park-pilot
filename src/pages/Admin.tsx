@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLogin } from "@/components/AdminLogin";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,57 +6,136 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, MapPin, Settings, LogOut, Shield } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Settings, LogOut, Shield, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ParkingZone {
   id: string;
-  name: string;
   totalSpots: number;
-  occupiedSpots: number;
+  availableSpots: number;
   address: string;
+  latitude: number;
+  longitude: number;
+  zone: string;
   status: 'active' | 'maintenance' | 'offline';
 }
+
+
+
+// API function to add parking zone
+const addParkingZoneToAPI = async (zoneData: {
+  address: string;
+  numberOfSpots: number;
+  availablePlaces: number;
+  latitude: number;
+  longitude: number;
+  type: string;
+}) => {
+  try {
+    const response = await fetch('/api/parking', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(zoneData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
 
 const Admin = () => {
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [zones, setZones] = useState<ParkingZone[]>([
-    {
-      id: "1",
-      name: "Piața Victoriei",
-      totalSpots: 120,
-      availableSpots: 23,
-      address: "Piața Victoriei, Timișoara",
-      status: 'active'
-    },
-    {
-      id: "2",
-      name: "Centrul Vechi",
-      totalSpots: 85,
-      availableSpots: 42,
-      address: "Piața Unirii, Timișoara",
-      status: 'active'
-    },
-    {
-      id: "3",
-      name: "Bega Shopping Center",
-      totalSpots: 300,
-      availableSpots: 156,
-      address: "Calea Timișoarei 20, Timișoara",
-      status: 'active'
-    }
-  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [zones, setZones] = useState<ParkingZone[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [editingZone, setEditingZone] = useState<ParkingZone | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    totalSpots: '',
-    address: ''
+    numberOfSpots: '',
+    address: '',
+    availablePlaces: '',
+    latitude: '',
+    longitude: '',
+    zone: ''
   });
+
+  // Fetch parking zones from API
+  const fetchZones = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/parking');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const apiData = await response.json();
+      
+      // Map API data to ParkingZone format
+      const mappedZones: ParkingZone[] = apiData.map((zone: any, index: number) => {
+        // Parse address
+        const addressParts = zone.address.split(' ');
+        let street = '';
+        let number = '';
+        
+        const nrIndex = addressParts.findIndex((part: string) => part.toLowerCase().includes('nr'));
+        if (nrIndex !== -1 && nrIndex + 1 < addressParts.length) {
+          street = addressParts.slice(0, nrIndex).join(' ');
+          number = addressParts[nrIndex + 1];
+        } else {
+          const lastPart = addressParts[addressParts.length - 1];
+          if (/^\d+$/.test(lastPart)) {
+            number = lastPart;
+            street = addressParts.slice(0, -1).join(' ');
+          } else {
+            street = zone.address;
+            number = '1';
+          }
+        }
+
+        return {
+          id: `api-zone-${index}`,
+          totalSpots: zone.numberOfSpots,
+          availableSpots: zone.availablePlaces !== undefined ? zone.availablePlaces : zone.numberOfSpots,
+          address: zone.address,
+          latitude: zone.latitude,
+          longitude: zone.longitude,
+          zone: zone.type,
+          status: 'active' as const
+        };
+      });
+      
+      setZones(mappedZones);
+      console.log('Admin: Loaded zones from API:', mappedZones);
+    } catch (error) {
+      console.error('Error fetching zones:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load parking zones from server",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load zones when component mounts and user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchZones();
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = (success: boolean) => {
     setIsAuthenticated(success);
@@ -66,79 +145,166 @@ const Admin = () => {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
-  const handleAddZone = () => {
-    if (!formData.name || !formData.totalSpots || !formData.address) {
+  const handleAddZone = async () => {
+    if (!formData.numberOfSpots || !formData.address || !formData.latitude || !formData.longitude || !formData.zone) {
       toast({
-        title: "Eroare",
-        description: "Te rugăm să completezi toate câmpurile",
+        title: "Error",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
 
-    const newZone: ParkingZone = {
-      id: Date.now().toString(),
-      name: formData.name,
-      totalSpots: parseInt(formData.totalSpots),
-      availableSpots: parseInt(formData.totalSpots),
-      address: formData.address,
-      status: 'active'
-    };
+    setIsSubmitting(true);
 
-    setZones([...zones, newZone]);
-    setFormData({ name: '', totalSpots: '', address: '' });
-    setShowAddForm(false);
-    
-    toast({
-      title: "Succes",
-      description: "Zona de parcare adăugată cu succes"
-    });
+    try {
+      // Prepare data for API
+      const apiData = {
+        address: formData.address,
+        numberOfSpots: parseInt(formData.numberOfSpots),
+        availablePlaces: parseInt(formData.numberOfSpots), // Initially all spots available
+        latitude: parseFloat(formData.latitude),
+        longitude: parseFloat(formData.longitude),
+        type: formData.zone
+      };
+
+      // Log the data being sent to API for debugging
+      console.log('Sending to API:', apiData);
+
+      // Send to API
+      await addParkingZoneToAPI(apiData);
+
+      // Refresh zones from API to get updated data
+      await fetchZones();
+      setFormData({ numberOfSpots: '', address: '', availablePlaces: '', latitude: '', longitude: '', zone: '' });
+      setShowAddForm(false);
+      
+      toast({
+        title: "Success",
+        description: "Parking zone added successfully to API and data refreshed"
+      });
+
+    } catch (error) {
+      console.error('Error adding parking zone:', error);
+      toast({
+        title: "API Error",
+        description: "Failed to add parking zone to the API. Please check the server connection.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEditZone = (zone: ParkingZone) => {
     setEditingZone(zone);
     setFormData({
-      name: zone.name,
-      totalSpots: zone.totalSpots.toString(),
-      address: zone.address
+      numberOfSpots: zone.totalSpots.toString(),
+      address: zone.address,
+      availablePlaces: zone.availableSpots.toString(),
+      latitude: zone.latitude.toString(),
+      longitude: zone.longitude.toString(),
+      zone: zone.zone
     });
   };
 
-  const handleUpdateZone = () => {
+  const handleUpdateZone = async () => {
     if (!editingZone) return;
 
     setZones(zones.map(zone => 
       zone.id === editingZone.id 
         ? {
             ...zone,
-            name: formData.name,
-            totalSpots: parseInt(formData.totalSpots),
-            address: formData.address
+            totalSpots: parseInt(formData.numberOfSpots),
+            address: formData.address,
+            latitude: parseFloat(formData.latitude),
+            longitude: parseFloat(formData.longitude),
+            zone: formData.zone
           }
         : zone
     ));
 
-    setEditingZone(null);
-    setFormData({ name: '', totalSpots: '', address: '' });
-    
-    toast({
-      title: "Succes",
-      description: "Zona de parcare actualizată cu succes"
-    });
+    // Update zone via API
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/parking/${encodeURIComponent(editingZone.address)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: formData.address,
+          numberOfSpots: parseInt(formData.numberOfSpots),
+          availablePlaces: parseInt(formData.availablePlaces),
+          latitude: parseFloat(formData.latitude),
+          longitude: parseFloat(formData.longitude),
+          type: formData.zone
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await fetchZones(); // Refresh zones from API
+      setEditingZone(null);
+      setFormData({ numberOfSpots: '', address: '', availablePlaces: '', latitude: '', longitude: '', zone: '' });
+      
+      toast({
+        title: "Success",
+        description: "Parking zone updated successfully via API"
+      });
+    } catch (error) {
+      console.error('Error updating parking zone:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update parking zone",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteZone = (id: string) => {
-    setZones(zones.filter(zone => zone.id !== id));
-    toast({
-      title: "Succes",
-      description: "Zona de parcare ștearsă cu succes"
-    });
+  const handleDeleteZone = async (zone: ParkingZone) => {
+    if (!confirm(`Are you sure you want to delete the parking zone at ${zone.address}?`)) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/parking/${encodeURIComponent(zone.address)}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await fetchZones(); // Refresh zones from API
+      toast({
+        title: "Success",
+        description: "Parking zone deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting parking zone:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete parking zone",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleZoneStatus = (id: string) => {
     setZones(zones.map(zone =>
       zone.id === id
-        ? { ...zone, status: zone.status === 'active' ? 'inactive' : 'active' }
+        ? { ...zone, status: zone.status === 'active' ? 'offline' : 'active' }
         : zone
     ));
   };
@@ -173,28 +339,38 @@ const Admin = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Plus className="h-5 w-5" />
-                    <span>{editingZone ? 'Editează Zona' : 'Adaugă Zonă Nouă'}</span>
+                    <span>{editingZone ? 'Edit Parking Zone' : 'Add New Parking Zone'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="name">Numele Zonei</Label>
+                      <Label htmlFor="numberOfSpots">Number of Spots</Label>
                       <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Introdu numele zonei"
+                        id="numberOfSpots"
+                        type="number"
+                        value={formData.numberOfSpots}
+                        onChange={(e) => setFormData({ ...formData, numberOfSpots: e.target.value })}
+                        placeholder="Enter total number of spots"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="totalSpots">Total Locuri</Label>
+                      <Label htmlFor="availablePlaces">Available Places</Label>
                       <Input
-                        id="totalSpots"
+                        id="availablePlaces"
                         type="number"
-                        value={formData.totalSpots}
-                        onChange={(e) => setFormData({ ...formData, totalSpots: e.target.value })}
-                        placeholder="Introdu numărul total de locuri"
+                        value={formData.availablePlaces}
+                        onChange={(e) => setFormData({ ...formData, availablePlaces: e.target.value })}
+                        placeholder="Enter available places"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="zone">Zone (Color)</Label>
+                      <Input
+                        id="zone"
+                        value={formData.zone}
+                        onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
+                        placeholder="Enter zone color (red, yellow, green, etc.)"
                       />
                     </div>
                   </div>
@@ -204,45 +380,99 @@ const Admin = () => {
                       id="address"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Enter address"
+                      placeholder="Enter full address"
                     />
                   </div>
-                  <div className="flex space-x-2">
-                    <Button onClick={editingZone ? handleUpdateZone : handleAddZone}>
-                      {editingZone ? 'Update Zone' : 'Add Zone'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setEditingZone(null);
-                        setFormData({ name: '', totalSpots: '', address: '' });
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="latitude">Latitude</Label>
+                      <Input
+                        id="latitude"
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                        placeholder="Enter latitude (e.g., 45.7607)"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="longitude">Longitude</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                        placeholder="Enter longitude (e.g., 21.2268)"
+                      />
+                    </div>
                   </div>
+                                      <div className="flex space-x-2">
+                      <Button 
+                        onClick={editingZone ? handleUpdateZone : handleAddZone}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        {editingZone ? 'Update Zone' : 'Add Zone'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowAddForm(false);
+                          setEditingZone(null);
+                          setFormData({ numberOfSpots: '', address: '', availablePlaces: '', latitude: '', longitude: '', zone: '' });
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Add Zone Button */}
+                        {/* Add Zone Button & Refresh */}
             {!showAddForm && !editingZone && (
-              <Button onClick={() => setShowAddForm(true)} className="mb-4">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Zone
-              </Button>
+              <div className="flex gap-2 mb-4">
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Parking Zone
+                </Button>
+                <Button onClick={fetchZones} variant="outline" disabled={isLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh from API
+                </Button>
+              </div>
             )}
 
             {/* Zones List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {zones.map((zone) => (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                  <p className="text-slate-400">Loading parking zones from API...</p>
+                </div>
+              </div>
+            ) : zones.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400 mb-4">No parking zones found</p>
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Zone
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {zones.map((zone) => (
                 <Card key={zone.id} className="bg-card/50 backdrop-blur-sm border-slate-700">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{zone.name}</CardTitle>
-                      <Badge variant={zone.status === 'active' ? 'default' : 'secondary'}>
-                        {zone.status}
+                      <CardTitle className="text-lg">{zone.address.split(' ').slice(0, 3).join(' ')}</CardTitle>
+                      <Badge 
+                        variant={zone.status === 'active' ? 'default' : 'secondary'}
+                        style={{ backgroundColor: zone.zone === 'red' ? '#ef4444' : zone.zone === 'yellow' ? '#f59e0b' : '#22c55e' }}
+                      >
+                        {zone.zone}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -252,15 +482,36 @@ const Admin = () => {
                       <span>{zone.address}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Available:</span>
-                      <span className="font-semibold">{zone.availableSpots}/{zone.totalSpots}</span>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-slate-400">Total Spots:</span>
+                        <div className="font-semibold">{zone.totalSpots}</div>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Available:</span>
+                        <div className="font-semibold text-green-500">{zone.availableSpots}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-slate-400">Latitude:</span>
+                        <div className="font-mono text-xs">{zone.latitude.toFixed(6)}</div>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Longitude:</span>
+                        <div className="font-mono text-xs">{zone.longitude.toFixed(6)}</div>
+                      </div>
                     </div>
                     
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(zone.availableSpots / zone.totalSpots) * 100}%` }}
+                        className="h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${(zone.availableSpots / zone.totalSpots) * 100}%`,
+                          backgroundColor: zone.availableSpots === 0 ? '#ef4444' : 
+                                         (zone.availableSpots / zone.totalSpots) < 0.3 ? '#f59e0b' : '#22c55e'
+                        }}
                       ></div>
                     </div>
 
@@ -284,7 +535,7 @@ const Admin = () => {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => handleDeleteZone(zone.id)}
+                        onClick={() => handleDeleteZone(zone)}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         Delete
@@ -293,7 +544,8 @@ const Admin = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="settings">

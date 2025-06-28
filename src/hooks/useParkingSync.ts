@@ -4,10 +4,13 @@ import { aiService } from '@/services/aiService';
 interface ParkingZone {
   id: string;
   name: string;
-  address: string;
+  street: string;
+  number: string;
+  city: string;
+  country: string;
   totalSpots: number;
   availableSpots: number;
-  coordinates: { lat: number; lng: number };
+  coordinates?: { lat: number; lng: number };
   color: string;
   description: string;
 }
