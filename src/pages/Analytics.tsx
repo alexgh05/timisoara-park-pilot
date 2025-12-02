@@ -142,7 +142,7 @@ const Analytics = () => {
           {/* Hourly Occupancy */}
           <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
             <CardHeader>
-              <CardTitle>Model de Ocupare pe Ore</CardTitle>
+              <CardTitle>{language === 'ro' ? 'Model de Ocupare pe Ore' : 'Hourly Occupancy Pattern'}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -173,7 +173,7 @@ const Analytics = () => {
           {/* Zone Comparison */}
           <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
             <CardHeader>
-              <CardTitle>Compararea Ocupării pe Zone</CardTitle>
+              <CardTitle>{language === 'ro' ? 'Compararea Ocupării pe Zone' : 'Zone Occupancy Comparison'}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -200,7 +200,7 @@ const Analytics = () => {
           {/* Overall Distribution */}
           <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
             <CardHeader>
-              <CardTitle>Distribuția Generală</CardTitle>
+              <CardTitle>{language === 'ro' ? 'Distribuția Generală' : 'Overall Distribution'}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -231,11 +231,11 @@ const Analytics = () => {
               <div className="flex justify-center space-x-4 mt-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm">Occupied</span>
+                  <span className="text-sm">{language === 'ro' ? 'Ocupat' : 'Occupied'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm">Available</span>
+                  <span className="text-sm">{language === 'ro' ? 'Disponibil' : 'Available'}</span>
                 </div>
               </div>
             </CardContent>
@@ -244,7 +244,7 @@ const Analytics = () => {
           {/* Weekly Trends */}
           <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
             <CardHeader>
-              <CardTitle>Weekly Trends</CardTitle>
+              <CardTitle>{language === 'ro' ? 'Tendințe Săptămânale' : 'Weekly Trends'}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -269,7 +269,7 @@ const Analytics = () => {
           {/* Predictions */}
           <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
             <CardHeader>
-              <CardTitle>Parking Probability</CardTitle>
+              <CardTitle>{language === 'ro' ? 'Probabilitate Parcare' : 'Parking Probability'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

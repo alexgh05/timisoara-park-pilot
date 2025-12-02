@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, RotateCcw, Clock, Car, MapPin, Navigation, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Play, Pause, RotateCcw, Clock, MapPin, Navigation } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ParkingZone {
@@ -23,96 +22,87 @@ interface ParkingZone {
   description: string;
 }
 
-interface APIResponse {
-  address: string;
-  numberOfSpots: number;
-  availablePlaces?: number;
-  latitude: number;
-  longitude: number;
-  type: string;
-}
-
-// Function to fetch parking zones from API (same as ParkingMap)
-const fetchParkingZones = async (): Promise<APIResponse[]> => {
-  try {
-    const response = await fetch('/api/parking');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Heatmap: Raw API response:', data);
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch parking zones:', error);
-    throw error;
+// Mock parking zones data for Timișoara (same as ParkingMap)
+const mockParkingZones: ParkingZone[] = [
+  {
+    id: "zone-1",
+    name: "Piața Victoriei",
+    street: "Piața Victoriei",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 120,
+    availableSpots: 23,
+    coordinates: { lat: 45.7536, lng: 21.2257 },
+    color: "#f59e0b",
+    description: "Piața Victoriei - 23/120 locuri disponibile"
+  },
+  {
+    id: "zone-2",
+    name: "Bega Shopping Center",
+    street: "Calea Circumvalațiunii",
+    number: "156",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 300,
+    availableSpots: 156,
+    coordinates: { lat: 45.7489, lng: 21.2087 },
+    color: "#22c55e",
+    description: "Bega Shopping Center - 156/300 locuri disponibile"
+  },
+  {
+    id: "zone-3",
+    name: "Iulius Mall",
+    street: "Strada Aristide Demetriade",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 450,
+    availableSpots: 267,
+    coordinates: { lat: 45.7677, lng: 21.2278 },
+    color: "#22c55e",
+    description: "Iulius Mall - 267/450 locuri disponibile"
+  },
+  {
+    id: "zone-4",
+    name: "Centrul Vechi",
+    street: "Strada Alba Iulia",
+    number: "2",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 85,
+    availableSpots: 12,
+    coordinates: { lat: 45.7573, lng: 21.2293 },
+    color: "#ef4444",
+    description: "Centrul Vechi - 12/85 locuri disponibile"
+  },
+  {
+    id: "zone-5",
+    name: "Universitatea Politehnica",
+    street: "Piața Victoriei",
+    number: "2",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 75,
+    availableSpots: 45,
+    coordinates: { lat: 45.7472, lng: 21.2267 },
+    color: "#22c55e",
+    description: "Universitatea Politehnica - 45/75 locuri disponibile"
+  },
+  {
+    id: "zone-6",
+    name: "Gara de Nord",
+    street: "Strada Gării",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 100,
+    availableSpots: 34,
+    coordinates: { lat: 45.7506, lng: 21.2076 },
+    color: "#f59e0b",
+    description: "Gara de Nord - 34/100 locuri disponibile"
   }
-};
-
-// Function to parse address and map API data to ParkingZone (same as ParkingMap)
-const mapAPIDataToParkingZone = (apiData: APIResponse, index: number): ParkingZone => {
-  const addressParts = apiData.address.split(' ');
-  let street = '';
-  let number = '';
-  
-  const nrIndex = addressParts.findIndex(part => part.toLowerCase().includes('nr'));
-  if (nrIndex !== -1 && nrIndex + 1 < addressParts.length) {
-    street = addressParts.slice(0, nrIndex).join(' ');
-    number = addressParts[nrIndex + 1];
-  } else {
-    const lastPart = addressParts[addressParts.length - 1];
-    if (/^\d+$/.test(lastPart)) {
-      number = lastPart;
-      street = addressParts.slice(0, -1).join(' ');
-    } else {
-      street = apiData.address;
-      number = '1';
-    }
-  }
-
-  const availableSpots = apiData.availablePlaces !== undefined ? apiData.availablePlaces : apiData.numberOfSpots;
-  
-  let color = '#22c55e';
-  const availabilityPercentage = (availableSpots / apiData.numberOfSpots) * 100;
-  
-  if (apiData.type === 'red' || availableSpots === 0) {
-    color = '#ef4444';
-  } else if (apiData.type === 'yellow' || availabilityPercentage < 30) {
-    color = '#f59e0b';
-  } else if (apiData.type === 'green' || availabilityPercentage >= 50) {
-    color = '#22c55e';
-  }
-
-  const mappedZone = {
-    id: `api-zone-${index}`,
-    name: street,
-    street: street,
-    number: number,
-    city: 'Timișoara',
-    country: 'Romania',
-    totalSpots: apiData.numberOfSpots,
-    availableSpots: availableSpots,
-    coordinates: {
-      lat: apiData.latitude,
-      lng: apiData.longitude
-    },
-    color: color,
-    description: `${street} - ${availableSpots}/${apiData.numberOfSpots} spots available`
-  };
-
-  // Debug log for first few zones
-  if (index < 3) {
-    console.log(`ParkingHeatmap: Mapping zone ${index}:`, {
-      address: apiData.address,
-      apiLat: apiData.latitude,
-      apiLng: apiData.longitude,
-      mappedCoords: mappedZone.coordinates
-    });
-  }
-
-  return mappedZone;
-};
+];
 
 // Function to generate realistic traffic patterns for each zone
 const generateTrafficPattern = (zoneName: string, address: string): number[] => {
@@ -179,67 +169,28 @@ interface ParkingHeatmapProps {
 
 export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatmapProps) => {
   const { language } = useLanguage();
-  const { toast } = useToast();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
   const [isPlaying, setIsPlaying] = useState(false);
-  const [zones, setZones] = useState<ParkingZone[]>([]);
+  const [zones, setZones] = useState<ParkingZone[]>(mockParkingZones);
   const [zonePatterns, setZonePatterns] = useState<Record<string, number[]>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(propUserLocation || null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [lastUpdate] = useState<Date | null>(new Date());
 
-  // Fetch parking zones from API (exact same as ParkingMap)
+  // Initialize traffic patterns from mock data
   useEffect(() => {
-    console.log('ParkingHeatmap: Component mounted, starting data load...');
-    const loadParkingZones = async () => {
-      try {
-        setIsLoading(true);
-        console.log('ParkingHeatmap: Fetching parking zones from:', `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/parking`);
-        const apiData = await fetchParkingZones();
-        console.log('ParkingHeatmap: API returned', apiData.length, 'zones');
-        console.log('ParkingHeatmap: Raw API data sample:', apiData.slice(0, 2));
-        const mappedZones = apiData.map((zone, index) => mapAPIDataToParkingZone(zone, index));
-        console.log('ParkingHeatmap: Mapped zones sample:', mappedZones.slice(0, 2));
-        console.log('ParkingHeatmap: All zone coordinates:', mappedZones.map(z => ({ name: z.name, coords: z.coordinates })));
-        setZones(mappedZones);
-        setLastUpdate(new Date());
-        
-        // Generate traffic patterns for each zone
-        const patterns: Record<string, number[]> = {};
-        mappedZones.forEach(zone => {
-          patterns[zone.id] = generateTrafficPattern(zone.name, zone.street);
-        });
-        setZonePatterns(patterns);
-        
-        console.log('Heatmap: Successfully loaded', mappedZones.length, 'zones with traffic patterns');
-        console.log('First zone example:', mappedZones[0]);
-        console.log('Patterns:', patterns);
-      } catch (error) {
-        console.error('ParkingHeatmap: Error loading parking zones:', error);
-        toast({
-          title: language === 'ro' ? 'Eroare API' : 'API Error',
-          description: language === 'ro' 
-            ? 'Nu s-au putut încărca zonele de parcare'
-            : 'Failed to load parking zones from server',
-          variant: "destructive"
-        });
-        
-        // Fallback to empty zones
-        setZones([]);
-      } finally {
-        setIsLoading(false);
-        console.log('ParkingHeatmap: Loading finished - zones:', zones.length, 'patterns:', Object.keys(zonePatterns).length);
-      }
-    };
-
-    loadParkingZones();
-  }, [toast, language]);
+    const patterns: Record<string, number[]> = {};
+    mockParkingZones.forEach(zone => {
+      patterns[zone.id] = generateTrafficPattern(zone.name, zone.street);
+    });
+    setZonePatterns(patterns);
+  }, []);
 
   // Initialize map (exact same as ParkingMap)
   const initializeMap = () => {
@@ -304,7 +255,7 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
     }
   };
 
-  // Get user location (same as ParkingMap)
+  // Get user location - silent fail, no error toast
   const getUserLocation = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -323,24 +274,10 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
           }
         },
         (error) => {
-          console.error('Error getting location:', error);
-          toast({
-            title: language === 'ro' ? 'Eroare Localizare' : 'Location Error',
-            description: language === 'ro' 
-              ? 'Nu s-a putut determina locația'
-              : 'Could not determine location',
-            variant: "destructive"
-          });
+          console.log('Location not available:', error.message);
+          // Use default Timișoara location silently
         }
       );
-    } else {
-      toast({
-        title: language === 'ro' ? 'Localizare Indisponibilă' : 'Location Unavailable',
-        description: language === 'ro' 
-          ? 'Browserul nu suportă geolocalizarea'
-          : 'Browser does not support geolocation',
-        variant: "destructive"
-      });
     }
   };
 
@@ -447,7 +384,7 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
           
           <div style="margin-bottom: 16px;">
             <p style="color: #94a3b8; font-size: 14px; margin: 0 0 8px 0; line-height: 1.4;">
-              📍 ${zone.street} ${zone.number}, ${zone.city}
+              ${zone.street} ${zone.number}, ${zone.city}
             </p>
             <p style="color: #cbd5e1; font-size: 13px; margin: 0; line-height: 1.4;">
               Densitate trafic: ${intensity}%
@@ -491,7 +428,7 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
             padding: 12px;
           ">
             <p style="color: #93c5fd; font-size: 12px; margin: 0; font-weight: 500;">
-              🕐 Ora: ${String(currentHour).padStart(2, '0')}:00 - ${String((currentHour + 1) % 24).padStart(2, '0')}:00
+              Ora: ${String(currentHour).padStart(2, '0')}:00 - ${String((currentHour + 1) % 24).padStart(2, '0')}:00
             </p>
           </div>
         </div>
@@ -673,10 +610,10 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
               {/* Debug status */}
               <Badge variant={isMapReady ? "default" : zones.length > 0 ? "secondary" : "destructive"} className="text-xs">
                 {isMapReady ? 
-                  `✅ ${zones.length} zones` : 
+                  `${zones.length} zones` : 
                   zones.length > 0 ? 
-                    `⏳ Map loading...` : 
-                    `❌ No data`
+                    `Map loading...` : 
+                    `No data`
                 }
               </Badge>
             </div>
@@ -745,7 +682,7 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
                 }}
                 className="bg-card/50 backdrop-blur-sm border-slate-700"
               >
-                🔄
+                Reset
               </Button>
             </div>
           </div>
@@ -775,7 +712,7 @@ export const ParkingHeatmap = ({ userLocation: propUserLocation }: ParkingHeatma
             {zones.length === 0 && !isLoading && (
               <div className="absolute inset-0 bg-slate-800/90 rounded-lg flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-red-400 mb-2">❌</div>
+                  <div className="text-red-400 mb-2 text-xl">X</div>
                   <p className="text-slate-300 text-sm">
                     {language === 'ro' ? 'Nu s-au putut încărca zonele' : 'Failed to load zones'}
                   </p>

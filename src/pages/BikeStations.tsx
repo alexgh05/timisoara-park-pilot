@@ -146,267 +146,138 @@ const BikeStations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="container mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
+    <div className="min-h-screen relative">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
             {language === 'ro' ? 'Stații Biciclete' : 'Bike Stations'}
           </h1>
-          <p className="text-slate-300">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {language === 'ro' 
-              ? 'Rețeaua de bike-sharing din Timișoara cu disponibilitate în timp real'
-              : 'Timișoara bike-sharing network with real-time availability'
+              ? "Rețeaua i'Velo din Timișoara cu disponibilitate în timp real"
+              : "i'Velo network in Timișoara with real-time availability"
             }
           </p>
         </div>
 
-        {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                {language === 'ro' ? 'Total Stații' : 'Total Stations'}
-              </CardTitle>
-              <MapPin className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{bikeStations.length}</div>
-              <p className="text-xs text-slate-400">
-                {language === 'ro' ? 'în oraș' : 'citywide'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                {language === 'ro' ? 'Biciclete Disponibile' : 'Available Bikes'}
-              </CardTitle>
-              <Bike className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {bikeStations.reduce((sum, station) => sum + station.availableBikes, 0)}
-              </div>
-              <p className="text-xs text-green-500">
-                {language === 'ro' ? 'gata de folosit' : 'ready to use'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                {language === 'ro' ? 'Capacitate Totală' : 'Total Capacity'}
-              </CardTitle>
-              <Battery className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {bikeStations.reduce((sum, station) => sum + station.totalCapacity, 0)}
-              </div>
-              <p className="text-xs text-slate-400">
-                {language === 'ro' ? 'locuri total' : 'total spots'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">
-                {language === 'ro' ? 'Utilizare' : 'Usage Rate'}
-              </CardTitle>
-              <Clock className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">73%</div>
-              <p className="text-xs text-orange-500">
-                {language === 'ro' ? 'astăzi' : 'today'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 sm:p-4 ring-1 ring-border/50">
+            <p className="text-xs text-muted-foreground mb-1">{language === 'ro' ? 'Stații' : 'Stations'}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground">{bikeStations.length}</p>
+            <p className="text-xs text-muted-foreground">{language === 'ro' ? 'în oraș' : 'citywide'}</p>
+          </div>
+          <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 sm:p-4 ring-1 ring-border/50">
+            <p className="text-xs text-muted-foreground mb-1">{language === 'ro' ? 'Disponibile' : 'Available'}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground">
+              {bikeStations.reduce((sum, station) => sum + station.availableBikes, 0)}
+            </p>
+            <p className="text-xs text-green-500">{language === 'ro' ? 'biciclete' : 'bikes'}</p>
+          </div>
+          <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 sm:p-4 ring-1 ring-border/50">
+            <p className="text-xs text-muted-foreground mb-1">{language === 'ro' ? 'Capacitate' : 'Capacity'}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground">
+              {bikeStations.reduce((sum, station) => sum + station.totalCapacity, 0)}
+            </p>
+            <p className="text-xs text-muted-foreground">{language === 'ro' ? 'locuri' : 'spots'}</p>
+          </div>
+          <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 sm:p-4 ring-1 ring-border/50">
+            <p className="text-xs text-muted-foreground mb-1">{language === 'ro' ? 'Utilizare' : 'Usage'}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground">73%</p>
+            <p className="text-xs text-primary">{language === 'ro' ? 'astăzi' : 'today'}</p>
+          </div>
         </div>
 
         {/* Bike Stations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {bikeStations.map((station) => {
             const occupancyPercentage = Math.round((station.availableBikes / station.totalCapacity) * 100);
             
             return (
-              <Card key={station.id} className="bg-card/50 backdrop-blur-sm border-slate-700">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg flex items-center space-x-2">
-                        {getTypeIcon(station.type)}
-                        <span>{station.name}</span>
-                      </CardTitle>
-                      <p className="text-sm text-slate-400">{station.location}</p>
+              <div key={station.id} className="rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-sm ring-1 ring-border/50 overflow-hidden">
+                <div className="p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {getTypeIcon(station.type)}
+                      <div>
+                        <h3 className="text-sm font-medium text-foreground">{station.name}</h3>
+                        <p className="text-xs text-muted-foreground">{station.location}</p>
+                      </div>
                     </div>
                     {getStatusBadge(station.status, station.availableBikes)}
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Availability Display */}
-                  <div className="text-center">
-                    <div className={`text-3xl font-bold ${
-                      station.availableBikes > 5 ? 'text-green-500' :
-                      station.availableBikes > 2 ? 'text-yellow-500' : 'text-red-500'
-                    }`}>
-                      {station.availableBikes}
-                    </div>
-                    <p className="text-sm text-slate-400">
-                      {language === 'ro' ? 'biciclete disponibile' : 'bikes available'}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {station.totalCapacity} {language === 'ro' ? 'capacitate totală' : 'total capacity'} ({occupancyPercentage}%)
-                    </p>
-                    </div>
-                    
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="w-full bg-slate-700 rounded-full h-3">
-                      <div 
-                        className={`h-3 rounded-full transition-all duration-300 ${
-                          occupancyPercentage > 60 ? 'bg-green-500' :
-                          occupancyPercentage > 20 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${occupancyPercentage}%` }}
-                      />
-                    </div>
-                      </div>
-                    
-                  {/* Station Details */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">
-                        {language === 'ro' ? 'Distanță:' : 'Distance:'}
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className={`text-2xl font-bold ${
+                        station.availableBikes > 5 ? 'text-green-500' :
+                        station.availableBikes > 2 ? 'text-yellow-500' : 'text-red-500'
+                      }`}>
+                        {station.availableBikes}
                       </span>
-                      <span className="text-white">{station.distance}</span>
+                      <span className="text-xs text-muted-foreground ml-1">/ {station.totalCapacity}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">
-                        {language === 'ro' ? 'Tip:' : 'Type:'}
-                      </span>
-                      <span className="text-white capitalize">
-                        {station.type === 'electric' ? (language === 'ro' ? 'Electrice' : 'Electric') :
-                         station.type === 'standard' ? (language === 'ro' ? 'Standard' : 'Standard') :
-                         (language === 'ro' ? 'Mixte' : 'Mixed')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">
-                        {language === 'ro' ? 'Ultima verificare:' : 'Last check:'}
-                      </span>
-                      <span className="text-white">{station.lastMaintenance}</span>
-                    </div>
+                    <span className="text-xs text-muted-foreground">{station.distance}</span>
                   </div>
-
-                  {/* Navigation Button */}
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
+                  
+                  <div className="w-full bg-muted rounded-full h-1.5 mb-3">
+                    <div 
+                      className={`h-1.5 rounded-full transition-all ${
+                        occupancyPercentage > 60 ? 'bg-green-500' :
+                        occupancyPercentage > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${occupancyPercentage}%` }}
+                    />
+                  </div>
+                  
+                  <button 
                     onClick={() => openInMaps(station.name)}
+                    className="w-full px-3 py-2 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                   >
-                    <Navigation className="h-4 w-4 mr-2" />
-                    {language === 'ro' ? 'Navighează Aici' : 'Navigate Here'}
-                  </Button>
-                </CardContent>
-              </Card>
+                    {language === 'ro' ? 'Navighează' : 'Navigate'}
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
 
         {/* Usage Instructions */}
-        <div className="mt-8">
-          <Card className="bg-card/50 backdrop-blur-sm border-slate-700">
-          <CardHeader>
-              <CardTitle>
-                {language === 'ro' ? 'Cum Să Folosești Bicicletele' : 'How to Use the Bikes'}
-              </CardTitle>
-          </CardHeader>
-          <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center space-y-2">
-                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-xl font-bold text-primary">1</span>
-                  </div>
-                  <h4 className="font-semibold text-white">
-                    {language === 'ro' ? 'Înregistrează-te' : 'Sign Up'}
-                  </h4>
-                  <p className="text-sm text-slate-400">
-                    {language === 'ro' 
-                      ? 'Descarcă aplicația TimBike și creează un cont'
-                      : 'Download the TimBike app and create an account'
-                    }
-                  </p>
+        <div className="mt-4 sm:mt-6 rounded-xl sm:rounded-2xl bg-card/80 backdrop-blur-sm ring-1 ring-border/50 overflow-hidden">
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border/40">
+            <h2 className="text-sm sm:text-base font-semibold">
+              {language === 'ro' ? "Cum să folosești i'Velo" : "How to use i'Velo"}
+            </h2>
+          </div>
+          <div className="p-3 sm:p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="text-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-sm sm:text-base font-bold text-primary">1</span>
                 </div>
-
-                <div className="text-center space-y-2">
-                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-xl font-bold text-primary">2</span>
-                  </div>
-                  <h4 className="font-semibold text-white">
-                    {language === 'ro' ? 'Scanează QR' : 'Scan QR Code'}
-                  </h4>
-                  <p className="text-sm text-slate-400">
-                    {language === 'ro' 
-                      ? 'Scanează codul QR de pe bicicletă pentru deblocare'
-                      : 'Scan the QR code on the bike to unlock'
-                    }
-                  </p>
-                </div>
-
-                <div className="text-center space-y-2">
-                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-xl font-bold text-primary">3</span>
-                  </div>
-                  <h4 className="font-semibold text-white">
-                    {language === 'ro' ? 'Mergi cu Plăcere' : 'Enjoy Your Ride'}
-                  </h4>
-                  <p className="text-sm text-slate-400">
-                    {language === 'ro' 
-                      ? 'Urmează traseele recomandate și fii în siguranță'
-                      : 'Follow recommended routes and stay safe'
-                    }
-                  </p>
-                </div>
-
-                <div className="text-center space-y-2">
-                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-xl font-bold text-primary">4</span>
-                  </div>
-                  <h4 className="font-semibold text-white">
-                    {language === 'ro' ? 'Returnează' : 'Return'}
-                  </h4>
-                  <p className="text-sm text-slate-400">
-                    {language === 'ro' 
-                      ? 'Lasă bicicleta la orice stație disponibilă'
-                      : 'Drop off the bike at any available station'
-                    }
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">{language === 'ro' ? "Descarcă app" : "Download app"}</p>
               </div>
-
-              <div className="mt-8 pt-6 border-t border-slate-700">
-                <h4 className="font-semibold text-white mb-4">
-                  {language === 'ro' ? 'Informații Importante' : 'Important Information'}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-400">
-                  <div className="space-y-2">
-                    <p>• {language === 'ro' ? 'Preț: 2 RON/oră sau 25 RON/zi' : 'Price: 2 RON/hour or 25 RON/day'}</p>
-                    <p>• {language === 'ro' ? 'Prima 30 min gratuită pentru studenți' : 'First 30 min free for students'}</p>
-                    <p>• {language === 'ro' ? 'Casca inclusă și obligatorie' : 'Helmet included and mandatory'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p>• {language === 'ro' ? 'Serviciu disponibil 24/7' : 'Service available 24/7'}</p>
-                    <p>• {language === 'ro' ? 'Suport tehnic: 0256-123-456' : 'Technical support: 0256-123-456'}</p>
-                    <p>• {language === 'ro' ? 'App: iOS și Android' : 'App: iOS and Android'}</p>
-                  </div>
+              <div className="text-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-sm sm:text-base font-bold text-primary">2</span>
                 </div>
+                <p className="text-xs text-muted-foreground">{language === 'ro' ? "Scanează QR" : "Scan QR"}</p>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-sm sm:text-base font-bold text-primary">3</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{language === 'ro' ? "Pedalează" : "Ride"}</p>
+              </div>
+              <div className="text-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-sm sm:text-base font-bold text-primary">4</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{language === 'ro' ? "Returnează" : "Return"}</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
         </div>
       </div>
     </div>

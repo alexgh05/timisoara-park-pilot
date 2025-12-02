@@ -113,97 +113,41 @@ export const CookieConsent = ({ onLocationPermissionGranted }: CookieConsentProp
   if (!showConsent) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-end justify-center p-4 z-50">
-      <Card className="w-full max-w-2xl bg-card/95 backdrop-blur-sm border-slate-700 animate-in slide-in-from-bottom-5">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Cookie className="h-5 w-5 text-amber-500" />
-            <span>Cookie-uri și Permisiuni de Locație</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-sm text-slate-300">
-            Pentru a îți oferi cea mai bună experiență cu aplicația de parcare din Timișoara, 
-            avem nevoie de câteva permisiuni:
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4">
+      <div className="max-w-lg mx-auto bg-card/95 backdrop-blur-xl rounded-xl sm:rounded-2xl ring-1 ring-border/50 shadow-2xl p-4 sm:p-5">
+        <div className="flex items-start gap-3 mb-3">
+          <Cookie className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">
+              Cookie-uri și Locație
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Folosim cookie-uri și locația ta pentru a-ți arăta parcările din apropiere.
+            </p>
           </div>
-          
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg">
-              <MapPin className="h-5 w-5 text-blue-400" />
-              <div className="flex-1">
-                <div className="font-medium text-white">Acces la Locație</div>
-                <div className="text-xs text-slate-400">
-                  Pentru a găsi parcările din apropierea ta și pentru navigare
-                </div>
-              </div>
-              <Badge variant="secondary">Recomandat</Badge>
-            </div>
-            
-            <div className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg">
-              <Cookie className="h-5 w-5 text-amber-400" />
-              <div className="flex-1">
-                <div className="font-medium text-white">Cookie-uri Funcționale</div>
-                <div className="text-xs text-slate-400">
-                  Pentru a salva preferințele tale și a îmbunătăți experiența
-                </div>
-              </div>
-              <Badge variant="outline">Esențial</Badge>
-            </div>
-            
-            <div className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg">
-              <Shield className="h-5 w-5 text-green-400" />
-              <div className="flex-1">
-                <div className="font-medium text-white">Analiză și Îmbunătățiri</div>
-                <div className="text-xs text-slate-400">
-                  Pentru a înțelege cum folosești aplicația și a o îmbunătăți
-                </div>
-              </div>
-              <Badge variant="secondary">Opțional</Badge>
-            </div>
-          </div>
-          
-          <div className="text-xs text-slate-400 p-3 bg-blue-900/20 rounded-lg border border-blue-800">
-            <strong>Confidențialitate:</strong> Locația ta nu va fi stocată permanent și va fi folosită 
-            doar pentru a îți arăta parcările apropiate. Poți schimba aceste setări oricând.
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2 pt-2">
-            <Button 
-              onClick={handleAcceptAll} 
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              Acceptă Toate (Recomandat)
-            </Button>
-            <Button 
-              onClick={handleAcceptEssential} 
-              variant="outline" 
-              className="flex-1"
-            >
-              Doar Esențiale
-            </Button>
-            <Button 
-              onClick={handleDeclineAll} 
-              variant="ghost" 
-              className="flex-1 text-slate-400 hover:text-white"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Respinge
-            </Button>
-          </div>
-          
-          <div className="text-xs text-center text-slate-500">
-            Prin folosirea aplicației accepți{" "}
-            <a href="/privacy" className="text-blue-400 hover:underline">
-              Politica de Confidențialitate
-            </a>{" "}
-            și{" "}
-            <a href="/terms" className="text-blue-400 hover:underline">
-              Termenii de Utilizare
-            </a>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={handleAcceptAll} 
+            className="flex-1 min-w-[120px] px-3 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Acceptă tot
+          </button>
+          <button 
+            onClick={handleAcceptEssential} 
+            className="px-3 py-2 text-xs font-medium bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+          >
+            Doar esențiale
+          </button>
+          <button 
+            onClick={handleDeclineAll} 
+            className="px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Respinge
+          </button>
+        </div>
+      </div>
     </div>
   );
-}; 
+};

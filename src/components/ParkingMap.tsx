@@ -4,10 +4,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { MapPin, Car, Navigation, RefreshCw } from "lucide-react";
+import { MapPin, Car, Navigation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useParkingSync } from "@/hooks/useParkingSync";
 
 interface ParkingZone {
   id: string;
@@ -23,97 +21,87 @@ interface ParkingZone {
   description: string;
 }
 
-interface APIResponse {
-  address: string;
-  numberOfSpots: number;
-  availablePlaces?: number; // Available places from server
-  latitude: number;
-  longitude: number;
-  type: string;
-}
-
-// Function to fetch parking zones from API
-const fetchParkingZones = async (): Promise<APIResponse[]> => {
-  try {
-    const response = await fetch('/api/parking');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Raw API response:', data);
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch parking zones:', error);
-    throw error;
+// Mock parking zones data for Timișoara
+const mockParkingZones: ParkingZone[] = [
+  {
+    id: "zone-1",
+    name: "Piața Victoriei",
+    street: "Piața Victoriei",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 120,
+    availableSpots: 23,
+    coordinates: { lat: 45.7536, lng: 21.2257 },
+    color: "#f59e0b",
+    description: "Piața Victoriei - 23/120 locuri disponibile"
+  },
+  {
+    id: "zone-2",
+    name: "Bega Shopping Center",
+    street: "Calea Circumvalațiunii",
+    number: "156",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 300,
+    availableSpots: 156,
+    coordinates: { lat: 45.7489, lng: 21.2087 },
+    color: "#22c55e",
+    description: "Bega Shopping Center - 156/300 locuri disponibile"
+  },
+  {
+    id: "zone-3",
+    name: "Iulius Mall",
+    street: "Strada Aristide Demetriade",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 450,
+    availableSpots: 267,
+    coordinates: { lat: 45.7677, lng: 21.2278 },
+    color: "#22c55e",
+    description: "Iulius Mall - 267/450 locuri disponibile"
+  },
+  {
+    id: "zone-4",
+    name: "Centrul Vechi",
+    street: "Strada Alba Iulia",
+    number: "2",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 85,
+    availableSpots: 12,
+    coordinates: { lat: 45.7573, lng: 21.2293 },
+    color: "#ef4444",
+    description: "Centrul Vechi - 12/85 locuri disponibile"
+  },
+  {
+    id: "zone-5",
+    name: "Universitatea Politehnica",
+    street: "Piața Victoriei",
+    number: "2",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 75,
+    availableSpots: 45,
+    coordinates: { lat: 45.7472, lng: 21.2267 },
+    color: "#22c55e",
+    description: "Universitatea Politehnica - 45/75 locuri disponibile"
+  },
+  {
+    id: "zone-6",
+    name: "Gara de Nord",
+    street: "Strada Gării",
+    number: "1",
+    city: "Timișoara",
+    country: "Romania",
+    totalSpots: 100,
+    availableSpots: 34,
+    coordinates: { lat: 45.7506, lng: 21.2076 },
+    color: "#f59e0b",
+    description: "Gara de Nord - 34/100 locuri disponibile"
   }
-};
-
-// Function to parse address and map API data to ParkingZone
-const mapAPIDataToParkingZone = (apiData: APIResponse, index: number): ParkingZone => {
-  // Parse address - try to extract street number and name
-  const addressParts = apiData.address.split(' ');
-  let street = '';
-  let number = '';
-  
-  // Look for "Nr" pattern or try to find number at the end
-  const nrIndex = addressParts.findIndex(part => part.toLowerCase().includes('nr'));
-  if (nrIndex !== -1 && nrIndex + 1 < addressParts.length) {
-    street = addressParts.slice(0, nrIndex).join(' ');
-    number = addressParts[nrIndex + 1];
-  } else {
-    // Try to find a number at the end
-    const lastPart = addressParts[addressParts.length - 1];
-    if (/^\d+$/.test(lastPart)) {
-      number = lastPart;
-      street = addressParts.slice(0, -1).join(' ');
-    } else {
-      street = apiData.address;
-      number = '1'; // Default number
-    }
-  }
-
-  // Use actual available places from server, or default to numberOfSpots if not provided
-  const availableSpots = apiData.availablePlaces !== undefined ? apiData.availablePlaces : apiData.numberOfSpots;
-  
-  // Set color based on type and availability
-  let color = '#22c55e'; // Default green
-  const availabilityPercentage = (availableSpots / apiData.numberOfSpots) * 100;
-  
-  if (apiData.type === 'red' || availableSpots === 0) {
-    color = '#ef4444'; // Red
-  } else if (apiData.type === 'yellow' || availabilityPercentage < 30) {
-    color = '#f59e0b'; // Yellow/Orange
-  } else if (apiData.type === 'green' || availabilityPercentage >= 50) {
-    color = '#22c55e'; // Green
-  }
-
-  console.log(`Mapping zone ${index + 1}:`, {
-    address: apiData.address,
-    totalSpots: apiData.numberOfSpots,
-    availableSpots: availableSpots,
-    type: apiData.type,
-    calculatedColor: color
-  });
-
-  return {
-    id: `api-zone-${index}`,
-    name: street, // Use street as name
-    street: street,
-    number: number,
-    city: 'Timișoara', // Default city
-    country: 'Romania', // Default country
-    totalSpots: apiData.numberOfSpots,
-    availableSpots: availableSpots,
-    coordinates: {
-      lat: apiData.latitude,
-      lng: apiData.longitude
-    },
-    color: color,
-    description: `${street} - ${availableSpots}/${apiData.numberOfSpots} spots available`
-  };
-};
+];
 
 interface ParkingMapProps {
   onZoneSelect: (zoneId: string) => void;
@@ -126,105 +114,11 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(propUserLocation || null);
-  const [zones, setZones] = useState<ParkingZone[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [zones, setZones] = useState<ParkingZone[]>(mockParkingZones);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(new Date());
   const [isMapReady, setIsMapReady] = useState(false);
   const { toast } = useToast();
-
-  // Fetch parking zones from API on component mount
-  useEffect(() => {
-    const loadParkingZones = async () => {
-      try {
-        setIsLoading(true);
-        const apiData = await fetchParkingZones();
-        const mappedZones = apiData.map((zone, index) => mapAPIDataToParkingZone(zone, index));
-        setZones(mappedZones);
-        setLastUpdate(new Date());
-        console.log('Loaded parking zones from API:', mappedZones);
-      } catch (error) {
-        console.error('Error loading parking zones:', error);
-        toast({
-          title: "API Error",
-          description: "Failed to load parking zones from server. Using fallback data.",
-          variant: "destructive"
-        });
-        
-        // Fallback to default zones if API fails
-        setZones([
-          {
-            id: "fallback-1",
-            name: "Piața Victoriei",
-            street: "Piața Victoriei",
-            number: "1",
-            city: "Timișoara",
-            country: "Romania",
-            totalSpots: 120,
-            availableSpots: 0,
-            coordinates: { lat: 45.7607, lng: 21.2268 },
-            color: "#ef4444",
-            description: "Central square with premium parking spots"
-          }
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadParkingZones();
-  }, [toast]);
-
-  // Auto-refresh parking data every 30 seconds
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const refreshInterval = setInterval(async () => {
-      try {
-        console.log('Auto-refreshing parking data...');
-        const apiData = await fetchParkingZones();
-        const mappedZones = apiData.map((zone, index) => mapAPIDataToParkingZone(zone, index));
-        
-        // Only update if data has changed to avoid unnecessary re-renders
-        const hasChanges = JSON.stringify(mappedZones) !== JSON.stringify(zones);
-        if (hasChanges) {
-          setZones(mappedZones);
-          setLastUpdate(new Date());
-          console.log('Parking data updated automatically');
-        }
-      } catch (error) {
-        console.error('Auto-refresh failed:', error);
-        // Don't show toast for auto-refresh failures to avoid spam
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(refreshInterval);
-  }, [autoRefresh, zones]);
-
-  // Manual refresh function
-  const handleManualRefresh = async () => {
-    try {
-      setIsLoading(true);
-      const apiData = await fetchParkingZones();
-      const mappedZones = apiData.map((zone, index) => mapAPIDataToParkingZone(zone, index));
-      setZones(mappedZones);
-      setLastUpdate(new Date());
-      
-      toast({
-        title: "Data Refreshed",
-        description: `Updated ${mappedZones.length} parking zones`
-      });
-    } catch (error) {
-      console.error('Manual refresh failed:', error);
-      toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh parking data",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getAvailabilityColor = (available: number, total: number) => {
     const percentage = (available / total) * 100;
@@ -248,16 +142,10 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
               zoom: 15
             });
           }
-          toast({
-            title: "Location Found",
-            description: "Map centered on your location"
-          });
         },
-        () => {
-          toast({
-            title: "Location Error",
-            description: "Unable to get your location"
-          });
+        (error) => {
+          console.log('Location not available:', error.message);
+          // Silently fail - use default Timișoara location
         }
       );
     }
@@ -377,7 +265,7 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
               font-size: 14px; 
               margin: 0 0 8px 0;
               line-height: 1.4;
-            ">📍 ${zone.street} ${zone.number}, ${zone.city}, ${zone.country}</p>
+            ">${zone.street} ${zone.number}, ${zone.city}, ${zone.country}</p>
             <p style="
               color: #cbd5e1; 
               font-size: 13px; 
@@ -603,41 +491,23 @@ export const ParkingMap = ({ onZoneSelect, userLocation: propUserLocation }: Par
             </div>
             
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Auto-refresh (30s)</span>
-                <Switch 
-                  checked={autoRefresh}
-                  onCheckedChange={setAutoRefresh}
-                />
-              </div>
-              
               <div className="flex items-center justify-between text-xs text-slate-400">
                 {lastUpdate && (
-                  <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
+                  <span>Ultima actualizare: {lastUpdate.toLocaleTimeString()}</span>
                 )}
                 <Badge variant="outline" className="text-xs">
-                  {zones.length} zones loaded
+                  {zones.length} zone încărcate
                 </Badge>
               </div>
               
               <div className="flex space-x-2">
                 <Button onClick={getUserLocation} variant="outline" size="sm" className="flex-1">
                   <MapPin className="h-4 w-4 mr-2" />
-                  Location
+                  Locație
                 </Button>
                 <Button onClick={() => map.current?.flyTo({ center: [21.2267, 45.7489], zoom: 13 })} variant="outline" size="sm" className="flex-1">
                   <Navigation className="h-4 w-4 mr-2" />
                   Reset
-                </Button>
-                <Button 
-                  onClick={handleManualRefresh} 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
                 </Button>
               </div>
             </div>

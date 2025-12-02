@@ -52,7 +52,7 @@ const translations = {
     // ChatBot
     'chatbot.title': 'Asistent Parcare Inteligent',
     'chatbot.placeholder': 'Întreabă despre parcare, transport, biciclete sau rute...',
-    'chatbot.welcomeMessage': '🤖 Salut! Sunt Asistentul tău Inteligent pentru Parcare din Timișoara! Am acces în timp real la toate zonele de parcare, disponibilitatea locurilor și pot oferi recomandări inteligente.\n\n✨ Întreabă-mă orice despre:\n• Disponibilitatea curentă a parcărilor\n• Cele mai bune rute alternative când zonele sunt ocupate\n• Conexiuni transport public\n• Opțiuni de împărțire biciclete\n• Navigare și direcții\n\nVăd că în acest moment avem 425 de locuri disponibile în tot orașul. Cu ce te pot ajuta?',
+    'chatbot.welcomeMessage': 'Salut! Sunt Asistentul tău Inteligent pentru Parcare din Timișoara! Am acces în timp real la toate zonele de parcare, disponibilitatea locurilor și pot oferi recomandări inteligente.\n\nÎntreabă-mă orice despre:\n• Disponibilitatea curentă a parcărilor\n• Cele mai bune rute alternative când zonele sunt ocupate\n• Conexiuni transport public\n• Opțiuni de împărțire biciclete\n• Navigare și direcții\n\nVăd că în acest moment avem 425 de locuri disponibile în tot orașul. Cu ce te pot ajuta?',
     'chatbot.errorMessage': 'Am probleme cu conectarea la serviciul AI în acest moment. Te rog să încerci din nou într-un moment. Între timp, poți verifica harta noastră de parcare pentru disponibilitate în timp real!',
     'chatbot.genericError': 'Îmi pare rău, am întâmpinat o eroare. Te rog să încerci din nou.',
     'chatbot.viewParkingMap': 'Vezi Harta Parcărilor',
@@ -91,6 +91,12 @@ const translations = {
     'contact.timeSchedule': '8:00 - 18:00',
     'contact.timeScheduleSat': '9:00 - 14:00',
     'contact.timeScheduleMF': 'Luni-Vineri, 8:00 - 18:00',
+    'contact.faq1.question': 'Cum funcționează sistemul de parcare inteligent?',
+    'contact.faq1.answer': 'Sistemul nostru folosește senzori în timp real pentru a detecta locurile de parcare disponibile și afișează datele pe hartă pentru o navigare ușoară.',
+    'contact.faq2.question': 'Pot rezerva un loc de parcare în avans?',
+    'contact.faq2.answer': 'În prezent, sistemul oferă doar informații în timp real. Funcția de rezervare va fi disponibilă în actualizările viitoare.',
+    'contact.faq3.question': 'Cum raportez o problemă cu un loc de parcare?',
+    'contact.faq3.answer': 'Poți folosi formularul de contact de pe această pagină sau ne poți suna direct la numărul de telefon afișat.',
     
     // Admin
     'admin.title': 'Tablou de Bord Administrator',
@@ -132,7 +138,13 @@ const translations = {
     // 404 Page
     'notFound.title': '404',
     'notFound.message': 'Ups! Pagina nu a fost găsită',
-    'notFound.returnHome': 'Întoarce-te la Acasă'
+    'notFound.returnHome': 'Întoarce-te la Acasă',
+    
+    // Navigation controls
+    'nav.english': 'Engleză',
+    'nav.romanian': 'Română',
+    'nav.lightMode': 'Mod Luminos',
+    'nav.darkMode': 'Mod Întunecat',
   },
   en: {
     // Navigation
@@ -175,7 +187,7 @@ const translations = {
     // ChatBot
     'chatbot.title': 'Smart Parking Assistant',
     'chatbot.placeholder': 'Ask about parking, transport, bikes, or routes...',
-    'chatbot.welcomeMessage': '🤖 Hello! I\'m your AI-powered Smart Parking Assistant for Timișoara! I have real-time access to all parking zones, live spot availability, and can provide intelligent recommendations.\n\n✨ Ask me anything about:\n• Current parking availability\n• Best alternative routes when zones are full\n• Public transport connections\n• Bike sharing options\n• Navigation and directions\n\nI can see that right now we have 425 total available spots across the city. What can I help you find?',
+    'chatbot.welcomeMessage': 'Hello! I\'m your AI-powered Smart Parking Assistant for Timișoara! I have real-time access to all parking zones, live spot availability, and can provide intelligent recommendations.\n\nAsk me anything about:\n• Current parking availability\n• Best alternative routes when zones are full\n• Public transport connections\n• Bike sharing options\n• Navigation and directions\n\nI can see that right now we have 425 total available spots across the city. What can I help you find?',
     'chatbot.errorMessage': 'I\'m having trouble connecting to the AI service right now. Please try again in a moment. In the meantime, you can check our parking map for real-time availability!',
     'chatbot.genericError': 'Sorry, I encountered an error. Please try again.',
     'chatbot.viewParkingMap': 'View Parking Map',
@@ -214,6 +226,12 @@ const translations = {
     'contact.timeSchedule': '8:00 AM - 6:00 PM',
     'contact.timeScheduleSat': '9:00 AM - 2:00 PM',
     'contact.timeScheduleMF': 'Mon-Fri, 8:00 AM - 6:00 PM',
+    'contact.faq1.question': 'How does the smart parking system work?',
+    'contact.faq1.answer': 'Our system uses real-time sensors to detect available parking spots and displays the data on a map for easy navigation.',
+    'contact.faq2.question': 'Can I reserve a parking spot in advance?',
+    'contact.faq2.answer': 'Currently, the system only provides real-time information. The reservation feature will be available in future updates.',
+    'contact.faq3.question': 'How do I report an issue with a parking spot?',
+    'contact.faq3.answer': 'You can use the contact form on this page or call us directly at the phone number displayed.',
     
     // Admin
     'admin.title': 'Admin Dashboard',
@@ -255,7 +273,13 @@ const translations = {
     // 404 Page
     'notFound.title': '404',
     'notFound.message': 'Oops! Page not found',
-    'notFound.returnHome': 'Return to Home'
+    'notFound.returnHome': 'Return to Home',
+    
+    // Navigation controls
+    'nav.english': 'English',
+    'nav.romanian': 'Romanian',
+    'nav.lightMode': 'Light Mode',
+    'nav.darkMode': 'Dark Mode',
   }
 };
 
